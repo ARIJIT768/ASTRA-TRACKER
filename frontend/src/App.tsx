@@ -36,7 +36,6 @@ function App() {
   const [members, setMembers] = useState<Member[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [globalLogs, setGlobalLogs] = useState<Log[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'team'>('dashboard');
   
   const [loggedInMember, setLoggedInMember] = useState<Member | null>(() => {
@@ -60,11 +59,10 @@ function App() {
 
   const fetchDashboardData = async (memberId: number) => {
     try {
-      const [membersRes, logsRes, remRes, activityRes] = await Promise.all([
+      const [membersRes, logsRes, remRes] = await Promise.all([
         fetch(`${API_URL}/members`),
         fetch(`${API_URL}/logs/${memberId}`),
-        fetch(`${API_URL}/reminders/${memberId}`),
-        fetch(`${API_URL}/activity`)
+        fetch(`${API_URL}/reminders/${memberId}`)
       ]);
       
       const allMembers = await membersRes.json();
@@ -75,7 +73,6 @@ function App() {
 
       setLogs(await logsRes.json());
       setReminders(await remRes.json());
-      setGlobalLogs(await activityRes.json());
     } catch (err) {
       console.error('Failed to fetch dashboard data', err);
     }
@@ -322,48 +319,45 @@ function App() {
       )}
 
       {activeTab === 'team' && (
-        <div className="dashboard-grid">
+        <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr' }}>
           <div className="main-content">
             <div className="panel glass animate-stagger-1">
-              <h2>Global Team Activity</h2>
-              <div className="logs-list">
-                {globalLogs.length === 0 ? (
-                  <p style={{ color: 'var(--text-secondary)' }}>No global activity tracked yet.</p>
-                ) : (
-                  globalLogs.map(log => (
-                    <div key={log.id} className="log-item">
-                      <div className="log-header">
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                          <span style={{ color: 'var(--accent-primary)', fontWeight: 'bold', fontSize: '0.9rem' }}>{log.member_name}</span>
-                          <span className="log-name" style={{ color: 'var(--text-primary)' }}>{log.description}</span>
+              <h2>Global Team Progress</h2>
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                Summary of total weekly hours and quota progress for all members.
+              </p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                {[...members].sort((a, b) => b.current_week_hours - a.current_week_hours).map((m, idx) => {
+                  const target = m.weekly_target_hours + m.carryover_deficit;
+                  const percent = Math.min(100, (m.current_week_hours / target) * 100);
+                  const isSuccess = m.current_week_hours >= target;
+                  
+                  return (
+                    <div key={m.id} className="panel glass" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', border: m.id === loggedInMember.id ? '1px solid var(--accent-primary)' : '' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                          <span className={`rank-badge ${idx < 3 ? `rank-${idx + 1}` : ''}`}>#{idx + 1}</span>
+                          <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: m.id === loggedInMember.id ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
+                            {m.name}
+                          </span>
                         </div>
-                        <span className="log-time" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(log.timestamp).toLocaleString()}</span>
+                        <span style={{ fontWeight: '800', fontSize: '1.2rem', color: isSuccess ? 'var(--success)' : 'var(--text-primary)' }}>
+                          {m.current_week_hours.toFixed(2)}h
+                        </span>
                       </div>
-                      <div className="log-scores" style={{ marginTop: '0.5rem' }}>
-                        <span className="badge">⏱️ {log.hours}h Logged</span>
+                      
+                      <div className="progress-container" style={{ height: '6px', marginBottom: '0.8rem' }}>
+                        <div className="progress-bar" style={{ width: `${percent}%`, background: isSuccess ? 'var(--success)' : 'var(--accent-primary)' }}></div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        <span>Target: {target.toFixed(2)}h</span>
+                        {m.carryover_deficit > 0 && <span style={{ color: 'var(--danger)' }}>Penalty: {m.carryover_deficit.toFixed(2)}h</span>}
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="sidebar">
-            <div className="panel glass animate-stagger-2">
-              <h2>🏆 Leaderboard (Hours)</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-                {[...members].sort((a, b) => b.current_week_hours - a.current_week_hours).map((m, idx) => (
-                  <div key={m.id} className={`leaderboard-item ${m.id === loggedInMember.id ? 'highlight' : ''}`}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <span className={`rank-badge ${idx < 3 ? `rank-${idx + 1}` : ''}`}>#{idx + 1}</span>
-                      <span style={{ fontWeight: m.id === loggedInMember.id ? 'bold' : '500', color: m.id === loggedInMember.id ? 'var(--accent-primary)' : 'var(--text-primary)', fontFamily: 'Outfit' }}>{m.name}</span>
-                    </div>
-                    <span style={{ fontWeight: '800', fontFamily: 'Outfit', color: m.current_week_hours >= (m.weekly_target_hours + m.carryover_deficit) ? 'var(--success)' : 'var(--text-primary)' }}>
-                      {m.current_week_hours.toFixed(2)}h
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
