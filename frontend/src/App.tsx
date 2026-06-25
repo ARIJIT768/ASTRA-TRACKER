@@ -226,7 +226,7 @@ function App() {
               <label>Select Your Profile</label>
               <select value={loginId} onChange={(e) => { setLoginId(e.target.value); setPin(''); }} required>
                 <option value="" disabled>Choose your name</option>
-                {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                {members.map(m => <option key={m.id} value={m.id}>[{m.id}] {m.name}</option>)}
               </select>
             </div>
             
