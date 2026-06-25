@@ -1,4 +1,8 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Doughnut, Bar } from 'react-chartjs-2';
+
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 // Use the permanent Vercel backend URL to guarantee connection
 const API_URL = 'https://astra-tracker-mu.vercel.app/api';
@@ -122,6 +126,71 @@ function App() {
     setReminders([]);
   };
 
+  // Chart Data Preparation
+  const appData = logs.reduce((acc: Record<string, { hours: number, points: number }>, log) => {
+    const appName = log.description.split(' - ')[0] || log.description;
+    if (!acc[appName]) {
+      acc[appName] = { hours: 0, points: 0 };
+    }
+    acc[appName].hours += log.hours;
+    acc[appName].points += log.total_score;
+    return acc;
+  }, {});
+
+  const chartLabels = Object.keys(appData);
+  const chartColors = [
+    '#00f0ff', '#7000ff', '#ff0055', '#00ff88', '#ffaa00', '#0055ff', '#ff00aa', '#00ffff'
+  ];
+
+  const doughnutData = {
+    labels: chartLabels,
+    datasets: [
+      {
+        data: chartLabels.map(app => appData[app].hours),
+        backgroundColor: chartColors.slice(0, chartLabels.length),
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const barData = {
+    labels: chartLabels,
+    datasets: [
+      {
+        label: 'Points Earned',
+        data: chartLabels.map(app => appData[app].points),
+        backgroundColor: 'rgba(0, 240, 255, 0.5)',
+        borderColor: '#00f0ff',
+        borderWidth: 1,
+        borderRadius: 4,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        labels: { color: '#fff', font: { family: 'Outfit' } }
+      }
+    },
+    scales: {
+      y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+      x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+    }
+  };
+
+  const doughnutOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'right' as const,
+        labels: { color: '#fff', font: { family: 'Outfit' } }
+      }
+    }
+  };
+
   const markReminderRead = async (id: number) => {
     try {
       await fetch(`${API_URL}/reminders/${id}/read`, { method: 'POST' });
@@ -222,6 +291,22 @@ function App() {
             </div>
 
             <div className="panel glass animate-stagger-2">
+              <h2>App Time Breakdown</h2>
+              {chartLabels.length === 0 ? (
+                <p style={{ color: 'var(--text-secondary)' }}>No app activity tracked yet.</p>
+              ) : (
+                <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '300px', height: '300px' }}>
+                    <Doughnut data={doughnutData} options={doughnutOptions} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: '300px', height: '300px', display: 'flex', alignItems: 'center' }}>
+                    <Bar data={barData} options={chartOptions as any} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="panel glass animate-stagger-3">
               <h2>Your Recent Activity</h2>
               <div className="logs-list">
                 {logs.length === 0 ? (
@@ -249,7 +334,7 @@ function App() {
 
           <div className="sidebar">
             {reminders.length > 0 && (
-              <div className="panel glass animate-stagger-3" style={{ borderColor: 'var(--danger)', boxShadow: '0 0 20px rgba(255,0,85,0.1)' }}>
+              <div className="panel glass animate-stagger-4" style={{ borderColor: 'var(--danger)', boxShadow: '0 0 20px rgba(255,0,85,0.1)' }}>
                 <h2>⚠️ Action Required</h2>
                 {reminders.map(rem => (
                   <div key={rem.id} className="reminder-item">
@@ -266,7 +351,7 @@ function App() {
               </div>
             )}
 
-            <div className="panel glass animate-stagger-4">
+            <div className="panel glass animate-stagger-5">
               <h2>Tracking Status</h2>
               <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
                 <div className="spinner" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', borderTopColor: 'var(--accent-primary)', marginBottom: '1rem' }}></div>

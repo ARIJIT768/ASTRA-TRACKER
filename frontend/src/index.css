@@ -213,7 +213,7 @@ label {
   font-weight: 500;
 }
 
-input, textarea, select {
+input, textarea {
   width: 100%;
   padding: 0.9rem 1.2rem;
   background: rgba(0, 0, 0, 0.4);
@@ -225,16 +225,43 @@ input, textarea, select {
   transition: all 0.3s ease;
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus, textarea:focus {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px var(--accent-glow), inset 0 0 10px rgba(0, 240, 255, 0.1);
   background: rgba(0, 0, 0, 0.6);
 }
 
-select option {
-  background-color: var(--bg-color);
+select {
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
   color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300f0ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.2em;
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-glow), inset 0 0 10px rgba(0, 240, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+select option {
+  background-color: #0a0b22;
+  color: #fff;
+  padding: 10px;
 }
 
 button.primary-btn {
@@ -406,6 +433,7 @@ button.primary-btn:disabled {
 .animate-stagger-2 { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
 .animate-stagger-3 { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
 .animate-stagger-4 { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
+.animate-stagger-5 { animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
 
 .spinner {
   width: 28px;
