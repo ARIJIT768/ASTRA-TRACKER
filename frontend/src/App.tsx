@@ -95,7 +95,7 @@ function App() {
     if (!loggedInMember) return;
     
     fetchDashboardData(loggedInMember.id);
-    const interval = setInterval(() => fetchDashboardData(loggedInMember.id), 30000);
+    const interval = setInterval(() => fetchDashboardData(loggedInMember.id), 5000);
     return () => clearInterval(interval);
   }, [loggedInMember?.id]);
 
