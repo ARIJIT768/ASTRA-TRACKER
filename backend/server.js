@@ -8,6 +8,11 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5001;
 
+// Root health check route for Vercel
+app.get('/', (req, res) => {
+    res.json({ status: 'ASTRA Backend is actively running on Vercel!' });
+});
+
 // Get all members
 app.get('/api/members', async (req, res) => {
     try {
