@@ -1,0 +1,16 @@
+{
+    "api_url": "http://localhost:5001/api/log",
+    "member_id": 1,
+    "submit_interval_minutes": 2,
+    "poll_interval_seconds": 5,
+    "idle_threshold_seconds": 60,
+    "allowed_apps": [
+        "VS Code",
+        "Visual Studio Code",
+        "Figma",
+        "Antigravity",
+        "Chrome",
+        "Google Chrome",
+        "Brave"
+    ]
+}
