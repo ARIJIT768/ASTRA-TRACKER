@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+// Use the permanent Vercel backend URL to guarantee connection
+const API_URL = 'https://astra-tracker-mu.vercel.app/api';
 
 type Member = {
   id: number;
