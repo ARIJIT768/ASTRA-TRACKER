@@ -93,6 +93,8 @@ def main():
     print(f"Submitting auto-logs every {submit_interval} seconds to {api_url}.")
     print("Press Ctrl+C to stop.")
     
+    last_seen_window = ""
+    
     while True:
         idle_seconds = get_idle_time_seconds()
         
@@ -100,6 +102,7 @@ def main():
         if idle_seconds < idle_threshold:
             title = get_active_window_title()
             if title:
+                last_seen_window = title
                 parts = title.split(' - ')
                 app_name = parts[-1].strip() if len(parts) > 1 else title.strip()
                 
@@ -136,7 +139,10 @@ def main():
                         except Exception as e:
                             print(f"[{time.strftime('%H:%M:%S')}] Failed to submit log for {app}: {e}")
             else:
-                print(f"[{time.strftime('%H:%M:%S')}] No activity tracked in the last {submit_interval} seconds. (Make sure you are not idle!)")
+                if idle_seconds >= idle_threshold:
+                    print(f"[{time.strftime('%H:%M:%S')}] No activity tracked. (You are marked as IDLE!)")
+                else:
+                    print(f"[{time.strftime('%H:%M:%S')}] No activity tracked. (Active window '{last_seen_window}' is not an allowed app)")
                 
             # Reset counters
             app_usage.clear()
