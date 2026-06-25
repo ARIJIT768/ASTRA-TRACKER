@@ -47,7 +47,7 @@ function App() {
     fetch(`${API_URL}/members`)
       .then(res => res.json())
       .then(data => setMembers(data))
-      .catch(err => console.error("Failed to load members"));
+      .catch(err => console.error("Failed to load members", err));
   }, []);
 
   const fetchDashboardData = async (memberId: number) => {
