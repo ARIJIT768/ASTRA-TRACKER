@@ -1,5 +1,5 @@
 {
-    "api_url": "http://localhost:5001/api/log",
+    "api_url": "https://astra-tracker-mu.vercel.app/api/log",
     "member_id": 1,
     "submit_interval_minutes": 2,
     "poll_interval_seconds": 5,

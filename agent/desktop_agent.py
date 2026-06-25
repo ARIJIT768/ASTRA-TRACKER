@@ -81,35 +81,23 @@ def main():
             total_seconds = sum(app_usage.values())
             
             if total_seconds > 0:
-                # Top 5 apps
-                sorted_apps = sorted(app_usage.items(), key=lambda x: x[1], reverse=True)
-                desc_parts = []
-                for app, sec in sorted_apps[:5]:
-                    mins = round(sec / 60, 1)
-                    if mins > 0:
-                        desc_parts.append(f"{app} ({mins}m)")
-                    else:
-                        desc_parts.append(f"{app} ({sec}s)")
-                        
-                description = f"Auto-tracked Apps: {', '.join(desc_parts)}"
-                hours = round(total_seconds / 3600, 4)
-                
-                payload = {
-                    "member_id": member_id,
-                    "description": description,
-                    "hours": hours
-                }
-                
-                data = json.dumps(payload).encode('utf-8')
-                req = urllib.request.Request(api_url, data=data, headers={'Content-Type': 'application/json'}, method='POST')
-                
-                try:
-                    with urllib.request.urlopen(req) as response:
-                        print(f"[{time.strftime('%H:%M:%S')}] Auto-submitted log successfully. Total active time tracked: {round(total_seconds/60, 2)} minutes.")
-                except Exception as e:
-                    print(f"[{time.strftime('%H:%M:%S')}] Failed to submit log: {e}")
+                for app, sec in app_usage.items():
+                    hours = round(sec / 3600, 4)
+                    if hours > 0:
+                        payload = {
+                            "member_id": member_id,
+                            "description": f"{app} - Auto Tracked",
+                            "hours": hours
+                        }
+                        data = json.dumps(payload).encode('utf-8')
+                        req = urllib.request.Request(api_url, data=data, headers={'Content-Type': 'application/json'}, method='POST')
+                        try:
+                            with urllib.request.urlopen(req) as response:
+                                print(f"[{time.strftime('%H:%M:%S')}] Logged {app} for {round(sec/60, 2)} minutes.")
+                        except Exception as e:
+                            print(f"[{time.strftime('%H:%M:%S')}] Failed to submit log for {app}: {e}")
             else:
-                print(f"[{time.strftime('%H:%M:%S')}] No activity tracked in the last {submit_interval} mins.")
+                print(f"[{time.strftime('%H:%M:%S')}] No activity tracked in the last {submit_interval} mins. (Make sure you are not idle!)")
                 
             # Reset counters
             app_usage.clear()
