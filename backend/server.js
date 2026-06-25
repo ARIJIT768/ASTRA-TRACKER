@@ -141,12 +141,12 @@ app.post('/api/end-week', async (req, res) => {
             if (member.current_week_hours < totalRequired) {
                 const missedBy = totalRequired - member.current_week_hours;
                 newDeficit += missedBy;
-                message = \`🚨 CRITICAL WARNING: You missed your quota by \${missedBy.toFixed(2)} hours this week. Your deficit penalty has been applied. Your new target for next week is \${(member.weekly_target_hours + newDeficit).toFixed(2)} hours. Get to work!\`;
+                message = `🚨 CRITICAL WARNING: You missed your quota by ${missedBy.toFixed(2)} hours this week. Your deficit penalty has been applied. Your new target for next week is ${(member.weekly_target_hours + newDeficit).toFixed(2)} hours. Get to work!`;
             } else {
                 // If they did extra work, it reduces their deficit (if they have one)
                 const extraHours = member.current_week_hours - totalRequired;
                 newDeficit = Math.max(0, newDeficit - extraHours);
-                message = \`✅ Great job! You successfully met your weekly target.\`;
+                message = `✅ Great job! You successfully met your weekly target.`;
             }
             
             // Add reminder
@@ -179,6 +179,6 @@ module.exports = app;
 // Fallback for local development
 if (require.main === module) {
     app.listen(PORT, () => {
-        console.log(\`Backend Server running on port \${PORT}\`);
+        console.log(`Backend Server running on port ${PORT}`);
     });
 }
