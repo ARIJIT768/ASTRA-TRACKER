@@ -246,7 +246,7 @@ function App() {
               </div>
             )}
             
-            <button type="submit" disabled={loading || !loginId}>
+            <button type="submit" className="primary-btn" disabled={loading || !loginId}>
               {loading ? <div className="spinner"></div> : (isSettingPin ? 'Save PIN & Login' : 'Access Dashboard')}
             </button>
           </form>
@@ -261,7 +261,7 @@ function App() {
         <h1>ASTRA Tracker</h1>
         <div className="glass" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
            <span style={{ color: 'var(--success)', fontWeight: '500' }}>{loggedInMember.name}</span>
-           <button onClick={handleLogout} style={{ padding: '0.3rem 0.8rem', fontSize: '0.8rem', width: 'auto', background: 'transparent', border: '1px solid var(--border-color)' }}>Logout</button>
+           <button onClick={handleLogout} className="primary-btn" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem', width: 'auto' }}>Logout</button>
         </div>
       </header>
 
