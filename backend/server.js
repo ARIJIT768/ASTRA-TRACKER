@@ -54,6 +54,23 @@ app.post('/api/set-pin', async (req, res) => {
     }
 });
 
+// Get global activity
+app.get('/api/activity', async (req, res) => {
+    const query = `
+        SELECT l.*, m.name as member_name 
+        FROM logs l 
+        JOIN members m ON l.member_id = m.id 
+        ORDER BY l.timestamp DESC 
+        LIMIT 50
+    `;
+    try {
+        const { rows } = await pool.query(query);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Get logs for a specific member
 app.get('/api/logs/:id', async (req, res) => {
     const query = `
