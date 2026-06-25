@@ -41,7 +41,14 @@ function App() {
   const [loggedInMember, setLoggedInMember] = useState<Member | null>(() => {
     const saved = localStorage.getItem('astra_user');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { return null; }
+      try { 
+        const parsed = JSON.parse(saved); 
+        if (parsed.current_week_hours === undefined) {
+           localStorage.removeItem('astra_user');
+           return null;
+        }
+        return parsed;
+      } catch (e) { return null; }
     }
     return null;
   });
@@ -208,9 +215,12 @@ function App() {
     );
   }
 
-  const totalTarget = loggedInMember.weekly_target_hours + loggedInMember.carryover_deficit;
-  const progressPercent = Math.min(100, (loggedInMember.current_week_hours / totalTarget) * 100);
-  const isSuccess = loggedInMember.current_week_hours >= totalTarget;
+  const currentHours = loggedInMember.current_week_hours || 0;
+  const deficit = loggedInMember.carryover_deficit || 0;
+  const targetHours = loggedInMember.weekly_target_hours || 0;
+  const totalTarget = targetHours + deficit;
+  const progressPercent = totalTarget > 0 ? Math.min(100, (currentHours / totalTarget) * 100) : 0;
+  const isSuccess = currentHours >= totalTarget;
 
   return (
     <div className="app-container">
@@ -237,14 +247,14 @@ function App() {
           <div className="main-content">
             <div className="panel glass animate-stagger-1">
               <h2>Your Weekly Progress</h2>
-              {loggedInMember.carryover_deficit > 0 && (
+              {deficit > 0 && (
                 <div style={{ background: 'rgba(255,0,85,0.1)', color: 'var(--danger)', padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid var(--danger)', marginBottom: '1rem', fontWeight: 'bold' }}>
-                  ⚠️ You have a carryover deficit penalty of {loggedInMember.carryover_deficit.toFixed(2)} hours from last week!
+                  ⚠️ You have a carryover deficit penalty of {deficit.toFixed(2)} hours from last week!
                 </div>
               )}
               <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '1rem 0' }}>
                 <div style={{ fontSize: '4.5rem', fontWeight: '800', fontFamily: 'Outfit', color: isSuccess ? 'var(--success)' : 'var(--text-primary)', textShadow: `0 0 20px ${isSuccess ? 'rgba(0,255,136,0.3)' : 'transparent'}` }}>
-                  {loggedInMember.current_week_hours.toFixed(2)}<span style={{ fontSize: '2rem', color: 'var(--text-secondary)' }}>h</span>
+                  {currentHours.toFixed(2)}<span style={{ fontSize: '2rem', color: 'var(--text-secondary)' }}>h</span>
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ color: 'var(--text-secondary)', marginBottom: '0.8rem', fontWeight: '500' }}>Weekly Target Goal: {totalTarget.toFixed(2)} hours</p>
@@ -328,22 +338,23 @@ function App() {
               </p>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-                {[...members].sort((a, b) => b.current_week_hours - a.current_week_hours).map((m, idx) => {
-                  const target = m.weekly_target_hours + m.carryover_deficit;
-                  const percent = Math.min(100, (m.current_week_hours / target) * 100);
-                  const isSuccess = m.current_week_hours >= target;
+                {[...members].sort((a, b) => (b.current_week_hours || 0) - (a.current_week_hours || 0)).map((m, idx) => {
+                  const target = (m.weekly_target_hours || 0) + (m.carryover_deficit || 0);
+                  const currentHours = m.current_week_hours || 0;
+                  const percent = target > 0 ? Math.min(100, (currentHours / target) * 100) : 0;
+                  const isSuccess = currentHours >= target;
                   
                   return (
-                    <div key={m.id} className="panel glass" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', border: m.id === loggedInMember.id ? '1px solid var(--accent-primary)' : '' }}>
+                    <div key={m.id} className="panel glass" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', border: loggedInMember && m.id === loggedInMember.id ? '1px solid var(--accent-primary)' : '' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                           <span className={`rank-badge ${idx < 3 ? `rank-${idx + 1}` : ''}`}>#{idx + 1}</span>
-                          <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: m.id === loggedInMember.id ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
+                          <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: loggedInMember && m.id === loggedInMember.id ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
                             {m.name}
                           </span>
                         </div>
                         <span style={{ fontWeight: '800', fontSize: '1.2rem', color: isSuccess ? 'var(--success)' : 'var(--text-primary)' }}>
-                          {m.current_week_hours.toFixed(2)}h
+                          {currentHours.toFixed(2)}h
                         </span>
                       </div>
                       
@@ -353,7 +364,7 @@ function App() {
                       
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                         <span>Target: {target.toFixed(2)}h</span>
-                        {m.carryover_deficit > 0 && <span style={{ color: 'var(--danger)' }}>Penalty: {m.carryover_deficit.toFixed(2)}h</span>}
+                        {(m.carryover_deficit || 0) > 0 && <span style={{ color: 'var(--danger)' }}>Penalty: {(m.carryover_deficit || 0).toFixed(2)}h</span>}
                       </div>
                     </div>
                   );
