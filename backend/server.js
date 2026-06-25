@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
 // Get all members
 app.get('/api/members', async (req, res) => {
     try {
-        const { rows } = await pool.query("SELECT id, name, score_threshold, total_score, CASE WHEN pin IS NULL THEN 0 ELSE 1 END as has_pin FROM members ORDER BY id ASC");
+        const { rows } = await pool.query("SELECT id, name, weekly_target_hours, current_week_hours, carryover_deficit, CASE WHEN pin IS NULL THEN 0 ELSE 1 END as has_pin FROM members ORDER BY id ASC");
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -27,7 +27,7 @@ app.get('/api/members', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     const { member_id, pin } = req.body;
     try {
-        const { rows } = await pool.query("SELECT id, name, score_threshold, total_score FROM members WHERE id = $1 AND pin = $2", [member_id, pin]);
+        const { rows } = await pool.query("SELECT id, name, weekly_target_hours, current_week_hours, carryover_deficit FROM members WHERE id = $1 AND pin = $2", [member_id, pin]);
         if (rows.length === 0) return res.status(401).json({ error: "Invalid PIN" });
         res.json({ success: true, member: rows[0] });
     } catch (err) {
@@ -47,7 +47,7 @@ app.post('/api/set-pin', async (req, res) => {
         
         await pool.query("UPDATE members SET pin = $1 WHERE id = $2", [pin, member_id]);
         
-        const memberData = await pool.query("SELECT id, name, score_threshold, total_score FROM members WHERE id = $1", [member_id]);
+        const memberData = await pool.query("SELECT id, name, weekly_target_hours, current_week_hours, carryover_deficit FROM members WHERE id = $1", [member_id]);
         res.json({ success: true, member: memberData.rows[0] });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -106,46 +106,7 @@ app.get('/api/reminders/:id', async (req, res) => {
     }
 });
 
-// Helper function to call Groq API to score a task
-async function getTaskScore(description) {
-    try {
-        const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) {
-            console.log("No GROQ_API_KEY provided. Defaulting to score 5.");
-            return 5;
-        }
-
-        const prompt = `You are a productivity bot. A team member completed the following task: "${description}".
-Rate the complexity and impact of this task on a scale of 1 to 10, where 1 is trivial and 10 is massive impact.
-Respond ONLY with a single integer between 1 and 10. Do not include any other text.`;
-        
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: 'llama3-8b-8192',
-                messages: [{ role: 'user', content: prompt }],
-                temperature: 0.1
-            })
-        });
-        
-        if (!response.ok) throw new Error('Groq API error');
-        const data = await response.json();
-        const aiText = data.choices[0].message.content;
-        
-        const scoreMatch = aiText.match(/\d+/);
-        let score = scoreMatch ? parseInt(scoreMatch[0]) : 5;
-        return Math.max(1, Math.min(10, score));
-    } catch (err) {
-        console.error("Error communicating with AI, falling back to default score", err);
-        return 5; 
-    }
-}
-
-// Log work
+// Log work (Strict Time Tracking)
 app.post('/api/log', async (req, res) => {
     const { member_id, description, hours } = req.body;
     
@@ -154,46 +115,53 @@ app.post('/api/log', async (req, res) => {
     }
 
     try {
-        const task_score = await getTaskScore(description);
-        const time_score = Math.round(hours * 2);
-        const total_score = task_score + time_score;
-
         await pool.query(
-            `INSERT INTO logs (member_id, description, hours, task_score, time_score, total_score) VALUES ($1, $2, $3, $4, $5, $6)`,
-            [member_id, description, hours, task_score, time_score, total_score]
+            "INSERT INTO logs (member_id, description, hours) VALUES ($1, $2, $3)",
+            [member_id, description, hours]
         );
                 
-        await pool.query(`UPDATE members SET total_score = total_score + $1 WHERE id = $2`, [total_score, member_id]);
+        await pool.query("UPDATE members SET current_week_hours = current_week_hours + $1 WHERE id = $2", [hours, member_id]);
         
-        // Check threshold asynchronously
-        checkThresholds().catch(console.error);
-        
-        res.json({ success: true, task_score, time_score, total_score });
+        res.json({ success: true, hours_added: hours });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// Bot function to check if anyone is falling behind
-async function checkThresholds() {
+// End of Week Calculation (Admin/Cron)
+app.post('/api/end-week', async (req, res) => {
     try {
-        const { rows: members } = await pool.query("SELECT id, name, total_score, score_threshold FROM members");
+        const { rows: members } = await pool.query("SELECT id, name, weekly_target_hours, current_week_hours, carryover_deficit FROM members");
         
         for (const member of members) {
-            if (member.total_score < member.score_threshold) {
-                const diff = member.score_threshold - member.total_score;
-                const message = `Reminder: You are ${diff} points below your target threshold of ${member.score_threshold}. Let's get some work done!`;
-                
-                const { rows: reminders } = await pool.query("SELECT id FROM reminders WHERE member_id = $1 AND is_read = 0", [member.id]);
-                if (reminders.length === 0) {
-                    await pool.query("INSERT INTO reminders (member_id, message) VALUES ($1, $2)", [member.id, message]);
-                }
+            const totalRequired = member.weekly_target_hours + member.carryover_deficit;
+            let newDeficit = member.carryover_deficit;
+            let message = "";
+            
+            if (member.current_week_hours < totalRequired) {
+                const missedBy = totalRequired - member.current_week_hours;
+                newDeficit += missedBy;
+                message = \`🚨 CRITICAL WARNING: You missed your quota by \${missedBy.toFixed(2)} hours this week. Your deficit penalty has been applied. Your new target for next week is \${(member.weekly_target_hours + newDeficit).toFixed(2)} hours. Get to work!\`;
+            } else {
+                // If they did extra work, it reduces their deficit (if they have one)
+                const extraHours = member.current_week_hours - totalRequired;
+                newDeficit = Math.max(0, newDeficit - extraHours);
+                message = \`✅ Great job! You successfully met your weekly target.\`;
             }
+            
+            // Add reminder
+            await pool.query("INSERT INTO reminders (member_id, message) VALUES ($1, $2)", [member.id, message]);
+            
+            // Reset current week and update deficit
+            await pool.query("UPDATE members SET current_week_hours = 0, carryover_deficit = $1 WHERE id = $2", [newDeficit, member.id]);
         }
+        
+        res.json({ success: true, message: "Weekly rollover executed successfully" });
     } catch (err) {
-        console.error("Threshold check error:", err);
+        console.error("End week error:", err);
+        res.status(500).json({ error: err.message });
     }
-}
+});
 
 // Mark reminder as read
 app.post('/api/reminders/:id/read', async (req, res) => {
@@ -211,6 +179,6 @@ module.exports = app;
 // Fallback for local development
 if (require.main === module) {
     app.listen(PORT, () => {
-        console.log(`Backend Server running on port ${PORT}`);
+        console.log(\`Backend Server running on port \${PORT}\`);
     });
 }

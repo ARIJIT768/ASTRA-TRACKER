@@ -4,14 +4,14 @@ import { Doughnut, Bar } from 'react-chartjs-2';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
-// Use the permanent Vercel backend URL to guarantee connection
 const API_URL = 'https://astra-tracker-mu.vercel.app/api';
 
 type Member = {
   id: number;
   name: string;
-  score_threshold: number;
-  total_score: number;
+  weekly_target_hours: number;
+  current_week_hours: number;
+  carryover_deficit: number;
   has_pin: number;
 };
 
@@ -21,9 +21,6 @@ type Log = {
   member_name: string;
   description: string;
   hours: number;
-  task_score: number;
-  time_score: number;
-  total_score: number;
   timestamp: string;
 };
 
@@ -42,15 +39,10 @@ function App() {
   const [globalLogs, setGlobalLogs] = useState<Log[]>([]);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'team'>('dashboard');
   
-  // Login State
   const [loggedInMember, setLoggedInMember] = useState<Member | null>(() => {
     const saved = localStorage.getItem('astra_user');
     if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return null;
-      }
+      try { return JSON.parse(saved); } catch (e) { return null; }
     }
     return null;
   });
@@ -59,12 +51,11 @@ function App() {
   const [loginError, setLoginError] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
-  // Fetch only members list initially for the login dropdown
   useEffect(() => {
     fetch(`${API_URL}/members`)
       .then(res => res.json())
       .then(data => setMembers(data))
-      .catch(err => console.error("Failed to load members", err));
+      .catch(err => console.error('Failed to load members', err));
   }, []);
 
   const fetchDashboardData = async (memberId: number) => {
@@ -79,7 +70,6 @@ function App() {
       const allMembers = await membersRes.json();
       setMembers(allMembers);
       
-      // Update logged in member's fresh score
       const freshMemberData = allMembers.find((m: Member) => m.id === memberId);
       if (freshMemberData) setLoggedInMember(freshMemberData);
 
@@ -87,13 +77,12 @@ function App() {
       setReminders(await remRes.json());
       setGlobalLogs(await activityRes.json());
     } catch (err) {
-      console.error("Failed to fetch dashboard data", err);
+      console.error('Failed to fetch dashboard data', err);
     }
   };
 
   useEffect(() => {
     if (!loggedInMember) return;
-    
     fetchDashboardData(loggedInMember.id);
     const interval = setInterval(() => fetchDashboardData(loggedInMember.id), 5000);
     return () => clearInterval(interval);
@@ -102,15 +91,12 @@ function App() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginId || !pin) return;
-    
     const selectedMember = members.find(m => m.id === Number(loginId));
     if (!selectedMember) return;
-    
     setLoading(true);
     setLoginError('');
     try {
       const endpoint = selectedMember.has_pin === 1 ? '/login' : '/set-pin';
-      
       const res = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,84 +124,64 @@ function App() {
     setReminders([]);
   };
 
-  // Chart Data Preparation
-  const appData = logs.reduce((acc: Record<string, { hours: number, points: number }>, log) => {
-    const appName = log.description.split(' - ')[0] || log.description;
-    if (!acc[appName]) {
-      acc[appName] = { hours: 0, points: 0 };
+  const simulateEndOfWeek = async () => {
+    if (!window.confirm('Are you sure you want to simulate an End of Week? This will calculate penalties and reset all current hours to 0!')) return;
+    try {
+      const res = await fetch(`${API_URL}/end-week`, { method: 'POST' });
+      if (res.ok) {
+        alert('End of week rollover simulated successfully!');
+        if (loggedInMember) fetchDashboardData(loggedInMember.id);
+      }
+    } catch(err) {
+      alert('Failed to simulate end of week');
     }
+  };
+
+  const appData = logs.reduce((acc: Record<string, { hours: number }>, log) => {
+    const appName = log.description.split(' - ')[0] || log.description;
+    if (!acc[appName]) acc[appName] = { hours: 0 };
     acc[appName].hours += log.hours;
-    acc[appName].points += log.total_score;
     return acc;
   }, {});
 
   const chartLabels = Object.keys(appData);
-  const chartColors = [
-    '#00f0ff', '#7000ff', '#ff0055', '#00ff88', '#ffaa00', '#0055ff', '#ff00aa', '#00ffff'
-  ];
+  const chartColors = ['#00f0ff', '#7000ff', '#ff0055', '#00ff88', '#ffaa00', '#0055ff', '#ff00aa', '#00ffff'];
 
   const doughnutData = {
     labels: chartLabels,
-    datasets: [
-      {
-        data: chartLabels.map(app => appData[app].hours),
-        backgroundColor: chartColors.slice(0, chartLabels.length),
-        borderColor: 'rgba(255,255,255,0.1)',
-        borderWidth: 1,
-      },
-    ],
+    datasets: [{
+      data: chartLabels.map(app => appData[app].hours),
+      backgroundColor: chartColors.slice(0, chartLabels.length),
+      borderColor: 'rgba(255,255,255,0.1)',
+      borderWidth: 1,
+    }],
   };
 
   const barData = {
     labels: chartLabels,
-    datasets: [
-      {
-        label: 'Points Earned',
-        data: chartLabels.map(app => appData[app].points),
-        backgroundColor: 'rgba(0, 240, 255, 0.5)',
-        borderColor: '#00f0ff',
-        borderWidth: 1,
-        borderRadius: 4,
-      },
-    ],
+    datasets: [{
+      label: 'Hours Logged',
+      data: chartLabels.map(app => appData[app].hours),
+      backgroundColor: 'rgba(0, 240, 255, 0.5)',
+      borderColor: '#00f0ff',
+      borderWidth: 1,
+      borderRadius: 4,
+    }],
   };
 
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        labels: { color: '#fff', font: { family: 'Outfit' } }
-      }
-    },
-    scales: {
-      y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-      x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
-    }
-  };
-
-  const doughnutOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'right' as const,
-        labels: { color: '#fff', font: { family: 'Outfit' } }
-      }
-    }
-  };
+  const chartOptions = { responsive: true, plugins: { legend: { labels: { color: '#fff', font: { family: 'Outfit' } } } }, scales: { y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: '#94a3b8' }, grid: { display: false } } } };
+  const doughnutOptions = { responsive: true, plugins: { legend: { position: 'right' as const, labels: { color: '#fff', font: { family: 'Outfit' } } } } };
 
   const markReminderRead = async (id: number) => {
     try {
       await fetch(`${API_URL}/reminders/${id}/read`, { method: 'POST' });
       setReminders(prev => prev.filter(r => r.id !== id));
-    } catch (err) {
-      console.error("Failed to mark reminder read");
-    }
+    } catch (err) { console.error('Failed to mark reminder read'); }
   };
 
   if (!loggedInMember) {
     const selectedMember = members.find(m => m.id === Number(loginId));
     const isSettingPin = selectedMember && selectedMember.has_pin === 0;
-
     return (
       <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
         <div className="panel glass" style={{ width: '100%', maxWidth: '400px' }}>
@@ -229,23 +195,13 @@ function App() {
                 {members.map(m => <option key={m.id} value={m.id}>[{m.id}] {m.name}</option>)}
               </select>
             </div>
-            
             {loginId && (
               <div className="form-group">
-                <label style={{ color: isSettingPin ? 'var(--accent-primary)' : 'inherit' }}>
-                  {isSettingPin ? 'Setup Your New PIN' : 'Enter Your PIN'}
-                </label>
-                <input 
-                  type="password" 
-                  value={pin} 
-                  onChange={(e) => setPin(e.target.value)} 
-                  placeholder={isSettingPin ? "Create a 4+ digit PIN" : "Enter PIN"} 
-                  required 
-                />
+                <label style={{ color: isSettingPin ? 'var(--accent-primary)' : 'inherit' }}>{isSettingPin ? 'Setup Your New PIN' : 'Enter Your PIN'}</label>
+                <input type="password" value={pin} onChange={(e) => setPin(e.target.value)} placeholder={isSettingPin ? 'Create a 4+ digit PIN' : 'Enter PIN'} required />
                 {isSettingPin && <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '0.5rem' }}>You will use this PIN for all future logins.</small>}
               </div>
             )}
-            
             <button type="submit" className="primary-btn" disabled={loading || !loginId}>
               {loading ? <div className="spinner"></div> : (isSettingPin ? 'Save PIN & Login' : 'Access Dashboard')}
             </button>
@@ -255,10 +211,19 @@ function App() {
     );
   }
 
+  const totalTarget = loggedInMember.weekly_target_hours + loggedInMember.carryover_deficit;
+  const progressPercent = Math.min(100, (loggedInMember.current_week_hours / totalTarget) * 100);
+  const isSuccess = loggedInMember.current_week_hours >= totalTarget;
+
   return (
     <div className="app-container">
       <header>
-        <h1>ASTRA Tracker</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <h1>ASTRA Tracker</h1>
+          <button onClick={simulateEndOfWeek} className="primary-btn" style={{ background: 'var(--danger)', borderColor: 'var(--danger)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto' }}>
+            Simulate End of Week
+          </button>
+        </div>
         <div className="glass" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
            <span style={{ color: 'var(--success)', fontWeight: '500' }}>{loggedInMember.name}</span>
            <button onClick={handleLogout} className="primary-btn" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem', width: 'auto' }}>Logout</button>
@@ -266,37 +231,28 @@ function App() {
       </header>
 
       <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2rem', padding: '0 1rem' }}>
-        <button 
-          className={`tab-button ${activeTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => setActiveTab('dashboard')} 
-        >
-          My Dashboard
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'team' ? 'active' : ''}`}
-          onClick={() => setActiveTab('team')} 
-        >
-          Team Activity
-        </button>
+        <button className={`tab-button ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>My Dashboard</button>
+        <button className={`tab-button ${activeTab === 'team' ? 'active' : ''}`} onClick={() => setActiveTab('team')}>Team Activity</button>
       </div>
 
       {activeTab === 'dashboard' && (
         <div className="dashboard-grid">
           <div className="main-content">
             <div className="panel glass animate-stagger-1">
-              <h2>Your Current Score</h2>
+              <h2>Your Weekly Progress</h2>
+              {loggedInMember.carryover_deficit > 0 && (
+                <div style={{ background: 'rgba(255,0,85,0.1)', color: 'var(--danger)', padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid var(--danger)', marginBottom: '1rem', fontWeight: 'bold' }}>
+                  ⚠️ You have a carryover deficit penalty of {loggedInMember.carryover_deficit.toFixed(2)} hours from last week!
+                </div>
+              )}
               <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '1rem 0' }}>
-                <div style={{ fontSize: '4.5rem', fontWeight: '800', fontFamily: 'Outfit', color: loggedInMember.total_score >= loggedInMember.score_threshold ? 'var(--success)' : 'var(--danger)', textShadow: `0 0 20px ${loggedInMember.total_score >= loggedInMember.score_threshold ? 'rgba(0,255,136,0.3)' : 'rgba(255,0,85,0.3)'}` }}>
-                  {loggedInMember.total_score}
+                <div style={{ fontSize: '4.5rem', fontWeight: '800', fontFamily: 'Outfit', color: isSuccess ? 'var(--success)' : 'var(--text-primary)', textShadow: `0 0 20px ${isSuccess ? 'rgba(0,255,136,0.3)' : 'transparent'}` }}>
+                  {loggedInMember.current_week_hours.toFixed(2)}<span style={{ fontSize: '2rem', color: 'var(--text-secondary)' }}>h</span>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ color: 'var(--text-secondary)', marginBottom: '0.8rem', fontWeight: '500' }}>Target Goal: {loggedInMember.score_threshold} points</p>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '0.8rem', fontWeight: '500' }}>Weekly Target Goal: {totalTarget.toFixed(2)} hours</p>
                   <div className="progress-container">
-                    <div className="progress-bar" style={{ 
-                      width: `${Math.min(100, (loggedInMember.total_score / loggedInMember.score_threshold) * 100)}%`, 
-                      background: loggedInMember.total_score >= loggedInMember.score_threshold ? 'var(--success)' : 'var(--accent-primary)',
-                      boxShadow: `0 0 10px ${loggedInMember.total_score >= loggedInMember.score_threshold ? 'var(--success)' : 'var(--accent-primary)'}`
-                    }}></div>
+                    <div className="progress-bar" style={{ width: `${progressPercent}%`, background: isSuccess ? 'var(--success)' : 'var(--accent-primary)', boxShadow: `0 0 10px ${isSuccess ? 'var(--success)' : 'var(--accent-primary)'}` }}></div>
                   </div>
                 </div>
               </div>
@@ -308,12 +264,8 @@ function App() {
                 <p style={{ color: 'var(--text-secondary)' }}>No app activity tracked yet.</p>
               ) : (
                 <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: '300px', height: '300px' }}>
-                    <Doughnut data={doughnutData} options={doughnutOptions} />
-                  </div>
-                  <div style={{ flex: 1, minWidth: '300px', height: '300px', display: 'flex', alignItems: 'center' }}>
-                    <Bar data={barData} options={chartOptions as any} />
-                  </div>
+                  <div style={{ width: '300px', height: '300px' }}><Doughnut data={doughnutData} options={doughnutOptions} /></div>
+                  <div style={{ flex: 1, minWidth: '300px', height: '300px', display: 'flex', alignItems: 'center' }}><Bar data={barData} options={chartOptions as any} /></div>
                 </div>
               )}
             </div>
@@ -328,14 +280,10 @@ function App() {
                     <div key={log.id} className="log-item">
                       <div className="log-header">
                         <span className="log-name" style={{ color: 'var(--text-primary)' }}>{log.description}</span>
-                        <span className="log-time" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                          {new Date(log.timestamp).toLocaleString()}
-                        </span>
+                        <span className="log-time" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(log.timestamp).toLocaleString()}</span>
                       </div>
                       <div className="log-scores" style={{ marginTop: '0.5rem' }}>
-                        <span className="badge">⏱️ {log.hours}h</span>
-                        <span className="badge">🤖 Bot Task Score: {log.task_score}/10</span>
-                        <span className="badge" style={{ color: 'var(--success)' }}>Earned: +{log.total_score} pts</span>
+                        <span className="badge">⏱️ {log.hours}h Logged</span>
                       </div>
                     </div>
                   ))
@@ -351,13 +299,7 @@ function App() {
                 {reminders.map(rem => (
                   <div key={rem.id} className="reminder-item">
                     <div className="reminder-message">{rem.message}</div>
-                    <button 
-                      onClick={() => markReminderRead(rem.id)}
-                      className="primary-btn"
-                      style={{ marginTop: '0.8rem', padding: '0.5rem', fontSize: '0.85rem' }}
-                    >
-                      Acknowledge
-                    </button>
+                    <button onClick={() => markReminderRead(rem.id)} className="primary-btn" style={{ marginTop: '0.8rem', padding: '0.5rem', fontSize: '0.85rem' }}>Acknowledge</button>
                   </div>
                 ))}
               </div>
@@ -371,7 +313,7 @@ function App() {
                 </a>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.5' }}>
                   Activity tracking is <strong>fully automated</strong>.<br /><br />
-                  No Python required! Download the standalone `.exe` agent and leave it running to get credited for your work.
+                  Download the standalone `.exe` agent, log in with your PIN, and leave it running to hit your weekly quota!
                 </p>
               </div>
             </div>
@@ -384,7 +326,6 @@ function App() {
           <div className="main-content">
             <div className="panel glass animate-stagger-1">
               <h2>Global Team Activity</h2>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Live feed of what everyone is working on right now.</p>
               <div className="logs-list">
                 {globalLogs.length === 0 ? (
                   <p style={{ color: 'var(--text-secondary)' }}>No global activity tracked yet.</p>
@@ -396,14 +337,10 @@ function App() {
                           <span style={{ color: 'var(--accent-primary)', fontWeight: 'bold', fontSize: '0.9rem' }}>{log.member_name}</span>
                           <span className="log-name" style={{ color: 'var(--text-primary)' }}>{log.description}</span>
                         </div>
-                        <span className="log-time" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                          {new Date(log.timestamp).toLocaleString()}
-                        </span>
+                        <span className="log-time" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(log.timestamp).toLocaleString()}</span>
                       </div>
                       <div className="log-scores" style={{ marginTop: '0.5rem' }}>
-                        <span className="badge">⏱️ {log.hours}h</span>
-                        <span className="badge">🤖 Bot Task Score: {log.task_score}/10</span>
-                        <span className="badge success-badge">Earned: +{log.total_score} pts</span>
+                        <span className="badge">⏱️ {log.hours}h Logged</span>
                       </div>
                     </div>
                   ))
@@ -414,20 +351,16 @@ function App() {
 
           <div className="sidebar">
             <div className="panel glass animate-stagger-2">
-              <h2>🏆 Leaderboard</h2>
+              <h2>🏆 Leaderboard (Hours)</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-                {[...members].sort((a, b) => b.total_score - a.total_score).map((m, idx) => (
+                {[...members].sort((a, b) => b.current_week_hours - a.current_week_hours).map((m, idx) => (
                   <div key={m.id} className={`leaderboard-item ${m.id === loggedInMember.id ? 'highlight' : ''}`}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <span className={`rank-badge ${idx < 3 ? `rank-${idx + 1}` : ''}`}>
-                        #{idx + 1}
-                      </span>
-                      <span style={{ fontWeight: m.id === loggedInMember.id ? 'bold' : '500', color: m.id === loggedInMember.id ? 'var(--accent-primary)' : 'var(--text-primary)', fontFamily: 'Outfit' }}>
-                        {m.name}
-                      </span>
+                      <span className={`rank-badge ${idx < 3 ? `rank-${idx + 1}` : ''}`}>#{idx + 1}</span>
+                      <span style={{ fontWeight: m.id === loggedInMember.id ? 'bold' : '500', color: m.id === loggedInMember.id ? 'var(--accent-primary)' : 'var(--text-primary)', fontFamily: 'Outfit' }}>{m.name}</span>
                     </div>
-                    <span style={{ fontWeight: '800', fontFamily: 'Outfit', color: m.total_score >= m.score_threshold ? 'var(--success)' : 'var(--text-primary)' }}>
-                      {m.total_score}
+                    <span style={{ fontWeight: '800', fontFamily: 'Outfit', color: m.current_week_hours >= (m.weekly_target_hours + m.carryover_deficit) ? 'var(--success)' : 'var(--text-primary)' }}>
+                      {m.current_week_hours.toFixed(2)}h
                     </span>
                   </div>
                 ))}

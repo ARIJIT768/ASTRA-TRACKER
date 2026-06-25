@@ -33,14 +33,15 @@ def get_active_window_title():
 def setup_member_id(config_path, config):
     api_url = config.get('api_url', 'https://astra-tracker-mu.vercel.app/api/log')
     members_url = api_url.replace('/log', '/members')
+    login_url = api_url.replace('/log', '/login')
     
     try:
         req = urllib.request.Request(members_url)
         with urllib.request.urlopen(req) as response:
             members = json.loads(response.read().decode('utf-8'))
     except Exception as e:
-        print("Could not fetch members list. Defaulting to ID 1.")
-        return 1
+        print("Could not fetch members list.")
+        return 0
         
     print("\n" + "="*40)
     print("WELCOME TO ASTRA DESKTOP TRACKER")
@@ -53,27 +54,51 @@ def setup_member_id(config_path, config):
         try:
             choice = int(input("\nEnter your ID number: "))
             selected_member = next((m for m in members if m['id'] == choice), None)
+            
             if selected_member:
-                config['member_id'] = choice
-                with open(config_path, 'w') as f:
-                    json.dump(config, f, indent=4)
-                print(f"Awesome! You are now locked in as '{selected_member['name']}'.")
-                print("Your ID has been saved to config.json.")
-                print("="*40 + "\n")
-                return choice
+                pin = input("Enter your 4-digit PIN: ")
+                
+                # Authenticate with server
+                auth_payload = json.dumps({"member_id": choice, "pin": pin}).encode('utf-8')
+                auth_req = urllib.request.Request(login_url, data=auth_payload, headers={'Content-Type': 'application/json'}, method='POST')
+                
+                try:
+                    with urllib.request.urlopen(auth_req) as response:
+                        result = json.loads(response.read().decode('utf-8'))
+                        if result.get('success'):
+                            config['member_id'] = choice
+                            config['pin'] = pin
+                            with open(config_path, 'w') as f:
+                                json.dump(config, f, indent=4)
+                            print(f"\nAwesome! Authenticated successfully as '{selected_member['name']}'.")
+                            print("="*40 + "\n")
+                            return choice
+                except urllib.error.HTTPError as e:
+                    if e.code == 401:
+                        print("❌ Invalid PIN. Authentication failed.")
+                    else:
+                        print("❌ Server error during authentication.")
             else:
-                print("Invalid number. Try again.")
+                print("Invalid ID number. Try again.")
         except ValueError:
             print("Please enter a valid number.")
 
+import sys
+
 def main():
-    config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+    if getattr(sys, 'frozen', False):
+        application_path = os.path.dirname(sys.executable)
+    else:
+        application_path = os.path.dirname(__file__)
+        
+    config_path = os.path.join(application_path, 'config.json')
+    
     try:
         with open(config_path, 'r') as f:
             config = json.load(f)
     except Exception as e:
-        print("Failed to load config.json", e)
-        return
+        config = {}
+        print("Creating new config.json...")
 
     member_id = config.get('member_id', 0)
     if not member_id or member_id == 0:
@@ -82,7 +107,7 @@ def main():
     api_url = config.get('api_url', 'https://astra-tracker-mu.vercel.app/api/log')
     poll_interval = config.get('poll_interval_seconds', 1)
     submit_interval = config.get('submit_interval_seconds', 5)
-    idle_threshold = config.get('idle_threshold_seconds', 60)
+    idle_threshold = config.get('idle_threshold_seconds', 30)
     
     app_usage = defaultdict(int) # app_name -> seconds spent
     last_submit_time = time.time()

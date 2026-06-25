@@ -20,8 +20,9 @@ async function initDb() {
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
                 pin VARCHAR(10) DEFAULT NULL,
-                score_threshold INTEGER DEFAULT 50,
-                total_score INTEGER DEFAULT 0
+                weekly_target_hours REAL DEFAULT 25.0,
+                current_week_hours REAL DEFAULT 0.0,
+                carryover_deficit REAL DEFAULT 0.0
             )
         `);
 
@@ -31,9 +32,6 @@ async function initDb() {
                 member_id INTEGER REFERENCES members(id),
                 description TEXT NOT NULL,
                 hours REAL NOT NULL,
-                task_score INTEGER NOT NULL,
-                time_score INTEGER NOT NULL,
-                total_score INTEGER NOT NULL,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
@@ -62,7 +60,7 @@ async function initDb() {
                 "Sreejani Chowdhury"
             ];
             for (const name of names) {
-                await pool.query("INSERT INTO members (name, score_threshold, total_score) VALUES ($1, $2, $3)", [name, 50, 0]);
+                await pool.query("INSERT INTO members (name) VALUES ($1)", [name]);
             }
             console.log("Seeded 8 specific members into PostgreSQL");
         }
