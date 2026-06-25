@@ -37,7 +37,7 @@ def setup_member_id(config_path, config):
     
     try:
         req = urllib.request.Request(members_url)
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=10) as response:
             members = json.loads(response.read().decode('utf-8'))
     except Exception as e:
         print("Could not fetch members list.")
@@ -63,7 +63,7 @@ def setup_member_id(config_path, config):
                 auth_req = urllib.request.Request(login_url, data=auth_payload, headers={'Content-Type': 'application/json'}, method='POST')
                 
                 try:
-                    with urllib.request.urlopen(auth_req) as response:
+                    with urllib.request.urlopen(auth_req, timeout=10) as response:
                         result = json.loads(response.read().decode('utf-8'))
                         if result.get('success'):
                             config['member_id'] = choice
@@ -159,7 +159,7 @@ def main():
                         data = json.dumps(payload).encode('utf-8')
                         req = urllib.request.Request(api_url, data=data, headers={'Content-Type': 'application/json'}, method='POST')
                         try:
-                            with urllib.request.urlopen(req) as response:
+                            with urllib.request.urlopen(req, timeout=10) as response:
                                 print(f"[{time.strftime('%H:%M:%S')}] Logged {app} for {round(sec/60, 2)} minutes.")
                         except Exception as e:
                             print(f"[{time.strftime('%H:%M:%S')}] Failed to submit log for {app}: {e}")
