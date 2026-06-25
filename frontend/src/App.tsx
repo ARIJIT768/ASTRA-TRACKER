@@ -186,14 +186,14 @@ function App() {
 
       <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2rem', padding: '0 1rem' }}>
         <button 
+          className={`tab-button ${activeTab === 'dashboard' ? 'active' : ''}`}
           onClick={() => setActiveTab('dashboard')} 
-          style={{ background: 'none', border: 'none', padding: '1rem', color: activeTab === 'dashboard' ? 'var(--accent-primary)' : 'var(--text-secondary)', borderBottom: activeTab === 'dashboard' ? '2px solid var(--accent-primary)' : '2px solid transparent', borderRadius: 0, fontWeight: 'bold' }}
         >
           My Dashboard
         </button>
         <button 
+          className={`tab-button ${activeTab === 'team' ? 'active' : ''}`}
           onClick={() => setActiveTab('team')} 
-          style={{ background: 'none', border: 'none', padding: '1rem', color: activeTab === 'team' ? 'var(--accent-primary)' : 'var(--text-secondary)', borderBottom: activeTab === 'team' ? '2px solid var(--accent-primary)' : '2px solid transparent', borderRadius: 0, fontWeight: 'bold' }}
         >
           Team Activity
         </button>
@@ -202,26 +202,26 @@ function App() {
       {activeTab === 'dashboard' && (
         <div className="dashboard-grid">
           <div className="main-content">
-            <div className="panel glass">
+            <div className="panel glass animate-stagger-1">
               <h2>Your Current Score</h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '1rem 0' }}>
-                <div style={{ fontSize: '4rem', fontWeight: 'bold', color: loggedInMember.total_score >= loggedInMember.score_threshold ? 'var(--success)' : 'var(--danger)' }}>
+                <div style={{ fontSize: '4.5rem', fontWeight: '800', fontFamily: 'Outfit', color: loggedInMember.total_score >= loggedInMember.score_threshold ? 'var(--success)' : 'var(--danger)', textShadow: `0 0 20px ${loggedInMember.total_score >= loggedInMember.score_threshold ? 'rgba(0,255,136,0.3)' : 'rgba(255,0,85,0.3)'}` }}>
                   {loggedInMember.total_score}
                 </div>
-                <div>
-                  <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Target Goal: {loggedInMember.score_threshold} points</p>
-                  <div style={{ width: '250px', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
-                    <div style={{ 
-                      height: '100%', 
+                <div style={{ flex: 1 }}>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '0.8rem', fontWeight: '500' }}>Target Goal: {loggedInMember.score_threshold} points</p>
+                  <div className="progress-container">
+                    <div className="progress-bar" style={{ 
                       width: `${Math.min(100, (loggedInMember.total_score / loggedInMember.score_threshold) * 100)}%`, 
-                      background: loggedInMember.total_score >= loggedInMember.score_threshold ? 'var(--success)' : 'var(--accent-primary)' 
+                      background: loggedInMember.total_score >= loggedInMember.score_threshold ? 'var(--success)' : 'var(--accent-primary)',
+                      boxShadow: `0 0 10px ${loggedInMember.total_score >= loggedInMember.score_threshold ? 'var(--success)' : 'var(--accent-primary)'}`
                     }}></div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="panel glass">
+            <div className="panel glass animate-stagger-2">
               <h2>Your Recent Activity</h2>
               <div className="logs-list">
                 {logs.length === 0 ? (
@@ -249,14 +249,15 @@ function App() {
 
           <div className="sidebar">
             {reminders.length > 0 && (
-              <div className="panel glass" style={{ borderColor: 'var(--danger)' }}>
+              <div className="panel glass animate-stagger-3" style={{ borderColor: 'var(--danger)', boxShadow: '0 0 20px rgba(255,0,85,0.1)' }}>
                 <h2>⚠️ Action Required</h2>
                 {reminders.map(rem => (
                   <div key={rem.id} className="reminder-item">
                     <div className="reminder-message">{rem.message}</div>
                     <button 
                       onClick={() => markReminderRead(rem.id)}
-                      style={{ marginTop: '0.5rem', padding: '0.4rem', fontSize: '0.8rem', background: 'rgba(255,255,255,0.1)' }}
+                      className="primary-btn"
+                      style={{ marginTop: '0.8rem', padding: '0.5rem', fontSize: '0.85rem' }}
                     >
                       Acknowledge
                     </button>
@@ -265,7 +266,7 @@ function App() {
               </div>
             )}
 
-            <div className="panel glass">
+            <div className="panel glass animate-stagger-4">
               <h2>Tracking Status</h2>
               <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
                 <div className="spinner" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', borderTopColor: 'var(--accent-primary)', marginBottom: '1rem' }}></div>
@@ -283,7 +284,7 @@ function App() {
       {activeTab === 'team' && (
         <div className="dashboard-grid">
           <div className="main-content">
-            <div className="panel glass">
+            <div className="panel glass animate-stagger-1">
               <h2>Global Team Activity</h2>
               <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.9rem' }}>Live feed of what everyone is working on right now.</p>
               <div className="logs-list">
@@ -304,7 +305,7 @@ function App() {
                       <div className="log-scores" style={{ marginTop: '0.5rem' }}>
                         <span className="badge">⏱️ {log.hours}h</span>
                         <span className="badge">🤖 Bot Task Score: {log.task_score}/10</span>
-                        <span className="badge" style={{ color: 'var(--success)' }}>Earned: +{log.total_score} pts</span>
+                        <span className="badge success-badge">Earned: +{log.total_score} pts</span>
                       </div>
                     </div>
                   ))
@@ -314,20 +315,20 @@ function App() {
           </div>
 
           <div className="sidebar">
-            <div className="panel glass">
+            <div className="panel glass animate-stagger-2">
               <h2>🏆 Leaderboard</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
                 {[...members].sort((a, b) => b.total_score - a.total_score).map((m, idx) => (
-                  <div key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.8rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                  <div key={m.id} className={`leaderboard-item ${m.id === loggedInMember.id ? 'highlight' : ''}`}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? '#cd7f32' : 'var(--text-secondary)' }}>
+                      <span className={`rank-badge ${idx < 3 ? `rank-${idx + 1}` : ''}`}>
                         #{idx + 1}
                       </span>
-                      <span style={{ fontWeight: m.id === loggedInMember.id ? 'bold' : 'normal', color: m.id === loggedInMember.id ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
+                      <span style={{ fontWeight: m.id === loggedInMember.id ? 'bold' : '500', color: m.id === loggedInMember.id ? 'var(--accent-primary)' : 'var(--text-primary)', fontFamily: 'Outfit' }}>
                         {m.name}
                       </span>
                     </div>
-                    <span style={{ fontWeight: 'bold', color: m.total_score >= m.score_threshold ? 'var(--success)' : 'var(--text-primary)' }}>
+                    <span style={{ fontWeight: '800', fontFamily: 'Outfit', color: m.total_score >= m.score_threshold ? 'var(--success)' : 'var(--text-primary)' }}>
                       {m.total_score}
                     </span>
                   </div>
