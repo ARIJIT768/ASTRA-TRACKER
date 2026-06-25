@@ -30,6 +30,42 @@ def get_active_window_title():
     except Exception:
         return ""
 
+def setup_member_id(config_path, config):
+    api_url = config.get('api_url', 'https://astra-tracker-mu.vercel.app/api/log')
+    members_url = api_url.replace('/log', '/members')
+    
+    try:
+        req = urllib.request.Request(members_url)
+        with urllib.request.urlopen(req) as response:
+            members = json.loads(response.read().decode('utf-8'))
+    except Exception as e:
+        print("Could not fetch members list. Defaulting to ID 1.")
+        return 1
+        
+    print("\n" + "="*40)
+    print("🚀 WELCOME TO ASTRA DESKTOP TRACKER 🚀")
+    print("="*40)
+    print("Please select your profile to begin tracking:")
+    for m in members:
+        print(f"[{m['id']}] {m['name']}")
+        
+    while True:
+        try:
+            choice = int(input("\nEnter your ID number: "))
+            selected_member = next((m for m in members if m['id'] == choice), None)
+            if selected_member:
+                config['member_id'] = choice
+                with open(config_path, 'w') as f:
+                    json.dump(config, f, indent=4)
+                print(f"Awesome! You are now locked in as '{selected_member['name']}'.")
+                print("Your ID has been saved to config.json.")
+                print("="*40 + "\n")
+                return choice
+            else:
+                print("Invalid number. Try again.")
+        except ValueError:
+            print("Please enter a valid number.")
+
 def main():
     config_path = os.path.join(os.path.dirname(__file__), 'config.json')
     try:
@@ -39,10 +75,13 @@ def main():
         print("Failed to load config.json", e)
         return
 
-    member_id = config.get('member_id', 1)
-    api_url = config.get('api_url', 'http://localhost:5001/api/log')
-    poll_interval = config.get('poll_interval_seconds', 5)
-    submit_interval = config.get('submit_interval_minutes', 2)
+    member_id = config.get('member_id', 0)
+    if not member_id or member_id == 0:
+        member_id = setup_member_id(config_path, config)
+
+    api_url = config.get('api_url', 'https://astra-tracker-mu.vercel.app/api/log')
+    poll_interval = config.get('poll_interval_seconds', 1)
+    submit_interval = config.get('submit_interval_seconds', 5)
     idle_threshold = config.get('idle_threshold_seconds', 60)
     
     app_usage = defaultdict(int) # app_name -> seconds spent
@@ -51,7 +90,7 @@ def main():
     print(f"Agent started for Member ID: {member_id}.")
     print(f"Polling active windows every {poll_interval}s.")
     print(f"Idle timeout set to {idle_threshold}s.")
-    print(f"Submitting auto-logs every {submit_interval} minutes to {api_url}.")
+    print(f"Submitting auto-logs every {submit_interval} seconds to {api_url}.")
     print("Press Ctrl+C to stop.")
     
     while True:
@@ -77,7 +116,7 @@ def main():
         time.sleep(poll_interval)
         
         current_time = time.time()
-        if current_time - last_submit_time >= (submit_interval * 60):
+        if current_time - last_submit_time >= submit_interval:
             total_seconds = sum(app_usage.values())
             
             if total_seconds > 0:
@@ -97,7 +136,7 @@ def main():
                         except Exception as e:
                             print(f"[{time.strftime('%H:%M:%S')}] Failed to submit log for {app}: {e}")
             else:
-                print(f"[{time.strftime('%H:%M:%S')}] No activity tracked in the last {submit_interval} mins. (Make sure you are not idle!)")
+                print(f"[{time.strftime('%H:%M:%S')}] No activity tracked in the last {submit_interval} seconds. (Make sure you are not idle!)")
                 
             # Reset counters
             app_usage.clear()
