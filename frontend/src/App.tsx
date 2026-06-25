@@ -43,7 +43,17 @@ function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'team'>('dashboard');
   
   // Login State
-  const [loggedInMember, setLoggedInMember] = useState<Member | null>(null);
+  const [loggedInMember, setLoggedInMember] = useState<Member | null>(() => {
+    const saved = localStorage.getItem('astra_user');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
   const [loginId, setLoginId] = useState<string>('');
   const [pin, setPin] = useState<string>('');
   const [loginError, setLoginError] = useState<string>('');
@@ -109,6 +119,7 @@ function App() {
       const data = await res.json();
       if (res.ok && data.success) {
         setLoggedInMember(data.member);
+        localStorage.setItem('astra_user', JSON.stringify(data.member));
         setPin('');
       } else {
         setLoginError(data.error || 'Invalid credentials');
@@ -121,6 +132,7 @@ function App() {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('astra_user');
     setLoggedInMember(null);
     setLogs([]);
     setReminders([]);
