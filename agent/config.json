@@ -1,6 +1,6 @@
 {
     "api_url": "https://astra-tracker-mu.vercel.app/api/log",
-    "member_id": 0,
+    "member_id": 3,
     "submit_interval_seconds": 5,
     "poll_interval_seconds": 1,
     "idle_threshold_seconds": 60,

@@ -43,7 +43,7 @@ def setup_member_id(config_path, config):
         return 1
         
     print("\n" + "="*40)
-    print("🚀 WELCOME TO ASTRA DESKTOP TRACKER 🚀")
+    print("WELCOME TO ASTRA DESKTOP TRACKER")
     print("="*40)
     print("Please select your profile to begin tracking:")
     for m in members:
