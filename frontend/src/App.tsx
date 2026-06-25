@@ -364,13 +364,14 @@ function App() {
             )}
 
             <div className="panel glass animate-stagger-5">
-              <h2>Tracking Status</h2>
+              <h2>ASTRA Agent</h2>
               <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-                <div className="spinner" style={{ borderColor: 'rgba(59, 130, 246, 0.3)', borderTopColor: 'var(--accent-primary)', marginBottom: '1rem' }}></div>
+                <a href="/ASTRA_Tracker.exe" download className="primary-btn" style={{ textDecoration: 'none', display: 'inline-block', marginBottom: '1rem', width: '100%', boxSizing: 'border-box' }}>
+                  📥 Download Windows Tracker
+                </a>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                  Activity tracking is <strong>fully automated</strong> by your background agent.
-                  <br /><br />
-                  Ensure your desktop agent is running to get credited for your work!
+                  Activity tracking is <strong>fully automated</strong>.<br /><br />
+                  No Python required! Download the standalone `.exe` agent and leave it running to get credited for your work.
                 </p>
               </div>
             </div>
