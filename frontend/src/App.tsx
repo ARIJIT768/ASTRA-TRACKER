@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement, Filler } from 'chart.js';
-import { Doughnut, Bar, Line } from 'react-chartjs-2';
+import { Chart as ChartJS, Tooltip, Legend, CategoryScale, LinearScale, Title, PointElement, LineElement, Filler } from 'chart.js';
+import { Line } from 'react-chartjs-2';
 import { SiBrave, SiGooglechrome, SiDiscord, SiSlack, SiFigma, SiYoutube, SiGithub } from 'react-icons/si';
 import { FaGamepad, FaTerminal, FaWhatsapp, FaSpaceShuttle, FaWindows } from 'react-icons/fa';
 import { VscVscode } from 'react-icons/vsc';
 import { MdWorkOutline } from 'react-icons/md';
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement, Filler);
+ChartJS.register(Tooltip, Legend, CategoryScale, LinearScale, Title, PointElement, LineElement, Filler);
 
 const API_URL = 'https://astra-tracker-mu.vercel.app/api';
 
@@ -183,95 +183,73 @@ function App() {
     }
   };
 
-  const appData = logs.reduce((acc: Record<string, { hours: number }>, log) => {
-    const appName = getParentAppName(log.description);
-    if (!acc[appName]) acc[appName] = { hours: 0 };
-    acc[appName].hours += log.hours;
-    return acc;
-  }, {});
-
-  const chartLabels = Object.keys(appData);
-  const chartColors = ['#00f0ff', '#7000ff', '#ff0055', '#00ff88', '#ffaa00', '#0055ff', '#ff00aa', '#00ffff'];
-
-  const doughnutData = {
-    labels: chartLabels,
-    datasets: [{
-      data: chartLabels.map(app => appData[app].hours),
-      backgroundColor: chartColors.slice(0, chartLabels.length),
-      borderColor: 'rgba(255,255,255,0.1)',
-      borderWidth: 1,
-    }],
-  };
-
-  const barData = {
-    labels: chartLabels,
-    datasets: [{
-      label: 'Hours Logged',
-      data: chartLabels.map(app => appData[app].hours),
-      backgroundColor: 'rgba(0, 240, 255, 0.5)',
-      borderColor: '#00f0ff',
-      borderWidth: 1,
-      borderRadius: 4,
-    }],
-  };
-
-  const chartOptions = { responsive: true, plugins: { legend: { labels: { color: '#fff', font: { family: 'Outfit' } } } }, scales: { y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: '#94a3b8' }, grid: { display: false } } } };
-  const doughnutOptions = { responsive: true, plugins: { legend: { position: 'right' as const, labels: { color: '#fff', font: { family: 'Outfit' } } } } };
-
-  const logsByDate = logs.reduce((acc: Record<string, number>, log) => {
+  // Build professional Line Chart data (Hours over time per App)
+  const logsByDateApp = logs.reduce((acc: Record<string, Record<string, number>>, log) => {
     const date = new Date(log.timestamp).toLocaleDateString();
-    acc[date] = (acc[date] || 0) + log.hours;
+    const app = getParentAppName(log.description);
+    if (!acc[date]) acc[date] = {};
+    if (!acc[date][app]) acc[date][app] = 0;
+    acc[date][app] += log.hours;
     return acc;
   }, {});
 
-  const sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  const sortedDates = Object.keys(logsByDateApp).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
   
   if (sortedDates.length === 1) {
     const dateObj = new Date(sortedDates[0]);
     dateObj.setDate(dateObj.getDate() - 1);
     const prevStr = dateObj.toLocaleDateString();
     sortedDates.unshift(prevStr);
-    logsByDate[prevStr] = 0;
+    logsByDateApp[prevStr] = {};
   }
-  
+
+  const allApps = Array.from(new Set(logs.map(log => getParentAppName(log.description))));
+  const chartColors = ['#00f0ff', '#7000ff', '#ff0055', '#00ff88', '#ffaa00', '#0055ff', '#ff00aa', '#00ffff'];
+
   const lineChartData = {
     labels: sortedDates,
-    datasets: [
-      {
-        label: 'Hours Logged',
-        data: sortedDates.map(date => logsByDate[date]),
-        fill: true,
-        backgroundColor: 'rgba(0, 240, 255, 0.1)',
-        borderColor: '#00f0ff',
+    datasets: allApps.map((app, index) => {
+      const color = chartColors[index % chartColors.length];
+      return {
+        label: app,
+        data: sortedDates.map(date => logsByDateApp[date]?.[app] || 0),
+        borderColor: color,
+        backgroundColor: color + '20', // transparent fill
         borderWidth: 2,
+        fill: true,
         tension: 0.4,
-        pointBackgroundColor: '#00f0ff',
+        pointBackgroundColor: color,
         pointBorderColor: '#fff',
         pointBorderWidth: 2,
         pointRadius: 4,
         pointHoverRadius: 6,
-      }
-    ]
+      };
+    })
   };
 
   const lineChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: { 
-      legend: { display: false },
+      legend: { 
+        position: 'top' as const,
+        labels: { color: '#fff', font: { family: 'Outfit' }, boxWidth: 12, usePointStyle: true }
+      },
       tooltip: {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
         titleColor: '#fff',
-        bodyColor: '#00f0ff',
+        bodyColor: '#fff',
         borderColor: 'rgba(0, 240, 255, 0.3)',
         borderWidth: 1,
         padding: 10,
-        displayColors: false,
+        mode: 'index' as const,
+        intersect: false,
       }
     },
     scales: {
       y: { 
         beginAtZero: true, 
+        stacked: true,
         ticks: { color: '#94a3b8', padding: 10 }, 
         grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false } 
       },
@@ -279,7 +257,8 @@ function App() {
         ticks: { color: '#94a3b8', padding: 10 }, 
         grid: { display: false, drawBorder: false } 
       }
-    }
+    },
+    interaction: { mode: 'nearest' as const, axis: 'x' as const, intersect: false }
   };
 
   const markReminderRead = async (id: number) => {
@@ -371,17 +350,7 @@ function App() {
               </div>
             </div>
 
-            <div className="panel glass animate-stagger-2">
-              <h2>App Time Breakdown</h2>
-              {chartLabels.length === 0 ? (
-                <p style={{ color: 'var(--text-secondary)' }}>No app activity tracked yet.</p>
-              ) : (
-                <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: '300px', height: '300px' }}><Doughnut data={doughnutData} options={doughnutOptions} /></div>
-                  <div style={{ flex: 1, minWidth: '300px', height: '300px', display: 'flex', alignItems: 'center' }}><Bar data={barData} options={chartOptions as any} /></div>
-                </div>
-              )}
-            </div>
+
 
             <div className="panel glass animate-stagger-3">
               <h2>App Monitor Activity</h2>
