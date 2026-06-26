@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
-import { Doughnut, Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement, Filler } from 'chart.js';
+import { Doughnut, Bar, Line } from 'react-chartjs-2';
+import { SiBrave, SiGooglechrome, SiDiscord, SiSlack, SiFigma, SiYoutube, SiGithub } from 'react-icons/si';
+import { FaGamepad, FaTerminal } from 'react-icons/fa';
+import { VscVscode } from 'react-icons/vsc';
+import { MdWorkOutline } from 'react-icons/md';
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement, Filler);
 
 const API_URL = 'https://astra-tracker-mu.vercel.app/api';
 
@@ -30,6 +34,21 @@ type Reminder = {
   member_name: string;
   message: string;
   timestamp: string;
+};
+
+const getAppIcon = (appName: string) => {
+  const lower = appName.toLowerCase();
+  if (lower.includes('brave')) return <SiBrave size={24} color="#FF4724" />;
+  if (lower.includes('code') || lower.includes('vscode')) return <VscVscode size={24} color="#007ACC" />;
+  if (lower.includes('chrome')) return <SiGooglechrome size={24} color="#4285F4" />;
+  if (lower.includes('discord')) return <SiDiscord size={24} color="#5865F2" />;
+  if (lower.includes('slack')) return <SiSlack size={24} color="#4A154B" />;
+  if (lower.includes('figma')) return <SiFigma size={24} color="#F24E1E" />;
+  if (lower.includes('youtube')) return <SiYoutube size={24} color="#FF0000" />;
+  if (lower.includes('github')) return <SiGithub size={24} color="#FFFFFF" />;
+  if (lower.includes('game')) return <FaGamepad size={24} color="#FF00AA" />;
+  if (lower.includes('terminal') || lower.includes('cmd') || lower.includes('powershell')) return <FaTerminal size={24} color="#00FF88" />;
+  return <MdWorkOutline size={24} color="#00F0FF" />;
 };
 
 function App() {
@@ -176,6 +195,39 @@ function App() {
   const chartOptions = { responsive: true, plugins: { legend: { labels: { color: '#fff', font: { family: 'Outfit' } } } }, scales: { y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: '#94a3b8' }, grid: { display: false } } } };
   const doughnutOptions = { responsive: true, plugins: { legend: { position: 'right' as const, labels: { color: '#fff', font: { family: 'Outfit' } } } } };
 
+  const logsByDate = logs.reduce((acc: Record<string, number>, log) => {
+    const date = new Date(log.timestamp).toLocaleDateString();
+    acc[date] = (acc[date] || 0) + log.hours;
+    return acc;
+  }, {});
+
+  const sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  
+  const lineChartData = {
+    labels: sortedDates,
+    datasets: [
+      {
+        label: 'Hours Logged',
+        data: sortedDates.map(date => logsByDate[date]),
+        fill: true,
+        backgroundColor: 'rgba(0, 240, 255, 0.1)',
+        borderColor: '#00f0ff',
+        tension: 0.4,
+        pointBackgroundColor: '#00f0ff',
+      }
+    ]
+  };
+
+  const lineChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+      x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+    }
+  };
+
   const markReminderRead = async (id: number) => {
     try {
       await fetch(`${API_URL}/reminders/${id}/read`, { method: 'POST' });
@@ -278,19 +330,34 @@ function App() {
             </div>
 
             <div className="panel glass animate-stagger-3">
-              <h2>Your Recent Activity</h2>
+              <h2>App Monitor Activity</h2>
+              <div style={{ height: '200px', marginBottom: '2rem', marginTop: '1rem' }}>
+                {sortedDates.length === 0 ? (
+                  <p style={{ color: 'var(--text-secondary)' }}>No activity data for chart.</p>
+                ) : (
+                  <Line data={lineChartData} options={lineChartOptions as any} />
+                )}
+              </div>
+
               <div className="logs-list">
                 {logs.length === 0 ? (
                   <p style={{ color: 'var(--text-secondary)' }}>No recent activity tracked yet.</p>
                 ) : (
                   logs.map(log => (
-                    <div key={log.id} className="log-item">
-                      <div className="log-header">
-                        <span className="log-name" style={{ color: 'var(--text-primary)' }}>{log.description}</span>
-                        <span className="log-time" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(log.timestamp).toLocaleString()}</span>
+                    <div key={log.id} className="log-item" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', marginBottom: '0.5rem' }}>
+                      <div className="app-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                        {getAppIcon(log.description.split(' - ')[0] || log.description)}
                       </div>
-                      <div className="log-scores" style={{ marginTop: '0.5rem' }}>
-                        <span className="badge">⏱️ {log.hours}h Logged</span>
+                      <div style={{ flex: 1 }}>
+                        <div className="log-header" style={{ marginBottom: '0.2rem' }}>
+                          <span className="log-name" style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '1.1rem' }}>{log.description}</span>
+                        </div>
+                        <div className="log-time" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(log.timestamp).toLocaleString()}</div>
+                      </div>
+                      <div className="log-scores">
+                        <span className="badge" style={{ background: 'rgba(0, 240, 255, 0.1)', color: '#00f0ff', padding: '0.5rem 1rem', borderRadius: '4px', fontWeight: 'bold', border: '1px solid rgba(0, 240, 255, 0.2)' }}>
+                          {log.hours.toFixed(2)}h
+                        </span>
                       </div>
                     </div>
                   ))
