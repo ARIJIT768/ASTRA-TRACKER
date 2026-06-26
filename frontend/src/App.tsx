@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title, PointElement, LineElement, Filler } from 'chart.js';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { SiBrave, SiGooglechrome, SiDiscord, SiSlack, SiFigma, SiYoutube, SiGithub } from 'react-icons/si';
-import { FaGamepad, FaTerminal } from 'react-icons/fa';
+import { FaGamepad, FaTerminal, FaWhatsapp, FaSpaceShuttle, FaWindows } from 'react-icons/fa';
 import { VscVscode } from 'react-icons/vsc';
 import { MdWorkOutline } from 'react-icons/md';
 
@@ -36,8 +36,29 @@ type Reminder = {
   timestamp: string;
 };
 
+const getParentAppName = (description: string) => {
+  const lower = description.toLowerCase();
+  if (lower.includes('whatsapp')) return 'WhatsApp';
+  if (lower.includes('brave')) return 'Brave';
+  if (lower.includes('code') || lower.includes('vscode') || lower.includes('.tsx') || lower.includes('.ts') || lower.includes('.js')) return 'VS Code';
+  if (lower.includes('figma')) return 'Figma';
+  if (lower.includes('antigravity')) return 'Antigravity';
+  if (lower.includes('astra')) return 'ASTRA Tracker';
+  if (lower.includes('chrome')) return 'Chrome';
+  if (lower.includes('discord')) return 'Discord';
+  if (lower.includes('slack')) return 'Slack';
+  if (lower.includes('youtube')) return 'YouTube';
+  if (lower.includes('github')) return 'GitHub';
+  if (lower.includes('terminal') || lower.includes('cmd') || lower.includes('powershell')) return 'Terminal';
+  if (lower.includes('explorer') || lower.includes('.exe')) return 'Windows OS';
+  
+  const parts = description.split(' - ');
+  return parts.length > 1 ? parts[parts.length - 1].trim() : description.trim();
+};
+
 const getAppIcon = (appName: string) => {
   const lower = appName.toLowerCase();
+  if (lower.includes('whatsapp')) return <FaWhatsapp size={24} color="#25D366" />;
   if (lower.includes('brave')) return <SiBrave size={24} color="#FF4724" />;
   if (lower.includes('code') || lower.includes('vscode')) return <VscVscode size={24} color="#007ACC" />;
   if (lower.includes('chrome')) return <SiGooglechrome size={24} color="#4285F4" />;
@@ -46,8 +67,10 @@ const getAppIcon = (appName: string) => {
   if (lower.includes('figma')) return <SiFigma size={24} color="#F24E1E" />;
   if (lower.includes('youtube')) return <SiYoutube size={24} color="#FF0000" />;
   if (lower.includes('github')) return <SiGithub size={24} color="#FFFFFF" />;
+  if (lower.includes('antigravity')) return <FaSpaceShuttle size={24} color="#9900FF" />;
   if (lower.includes('game')) return <FaGamepad size={24} color="#FF00AA" />;
   if (lower.includes('terminal') || lower.includes('cmd') || lower.includes('powershell')) return <FaTerminal size={24} color="#00FF88" />;
+  if (lower.includes('windows')) return <FaWindows size={24} color="#00A4EF" />;
   return <MdWorkOutline size={24} color="#00F0FF" />;
 };
 
@@ -161,7 +184,7 @@ function App() {
   };
 
   const appData = logs.reduce((acc: Record<string, { hours: number }>, log) => {
-    const appName = log.description.split(' - ')[0] || log.description;
+    const appName = getParentAppName(log.description);
     if (!acc[appName]) acc[appName] = { hours: 0 };
     acc[appName].hours += log.hours;
     return acc;
@@ -203,6 +226,14 @@ function App() {
 
   const sortedDates = Object.keys(logsByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
   
+  if (sortedDates.length === 1) {
+    const dateObj = new Date(sortedDates[0]);
+    dateObj.setDate(dateObj.getDate() - 1);
+    const prevStr = dateObj.toLocaleDateString();
+    sortedDates.unshift(prevStr);
+    logsByDate[prevStr] = 0;
+  }
+  
   const lineChartData = {
     labels: sortedDates,
     datasets: [
@@ -212,8 +243,13 @@ function App() {
         fill: true,
         backgroundColor: 'rgba(0, 240, 255, 0.1)',
         borderColor: '#00f0ff',
+        borderWidth: 2,
         tension: 0.4,
         pointBackgroundColor: '#00f0ff',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
       }
     ]
   };
@@ -221,10 +257,28 @@ function App() {
   const lineChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    plugins: { 
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#fff',
+        bodyColor: '#00f0ff',
+        borderColor: 'rgba(0, 240, 255, 0.3)',
+        borderWidth: 1,
+        padding: 10,
+        displayColors: false,
+      }
+    },
     scales: {
-      y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-      x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+      y: { 
+        beginAtZero: true, 
+        ticks: { color: '#94a3b8', padding: 10 }, 
+        grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false } 
+      },
+      x: { 
+        ticks: { color: '#94a3b8', padding: 10 }, 
+        grid: { display: false, drawBorder: false } 
+      }
     }
   };
 
@@ -343,24 +397,32 @@ function App() {
                 {logs.length === 0 ? (
                   <p style={{ color: 'var(--text-secondary)' }}>No recent activity tracked yet.</p>
                 ) : (
-                  logs.map(log => (
-                    <div key={log.id} className="log-item" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', marginBottom: '0.5rem' }}>
-                      <div className="app-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
-                        {getAppIcon(log.description.split(' - ')[0] || log.description)}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div className="log-header" style={{ marginBottom: '0.2rem' }}>
-                          <span className="log-name" style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '1.1rem' }}>{log.description}</span>
+                  logs.map(log => {
+                    const parentApp = getParentAppName(log.description);
+                    return (
+                      <div key={log.id} className="log-item" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', marginBottom: '0.5rem' }}>
+                        <div className="app-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '48px', height: '48px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                          {getAppIcon(parentApp)}
                         </div>
-                        <div className="log-time" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(log.timestamp).toLocaleString()}</div>
-                      </div>
+                        <div style={{ flex: 1 }}>
+                          <div className="log-header" style={{ marginBottom: '0.2rem' }}>
+                            <span className="log-name" style={{ color: 'var(--text-primary)', fontWeight: 'bold', fontSize: '1.1rem' }}>{parentApp}</span>
+                          </div>
+                          {log.description !== parentApp && (
+                            <div className="log-task" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.2rem', wordBreak: 'break-all' }}>
+                              {log.description}
+                            </div>
+                          )}
+                          <div className="log-time" style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{new Date(log.timestamp).toLocaleString()}</div>
+                        </div>
                       <div className="log-scores">
                         <span className="badge" style={{ background: 'rgba(0, 240, 255, 0.1)', color: '#00f0ff', padding: '0.5rem 1rem', borderRadius: '4px', fontWeight: 'bold', border: '1px solid rgba(0, 240, 255, 0.2)' }}>
                           {log.hours.toFixed(2)}h
                         </span>
                       </div>
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
