@@ -38,17 +38,17 @@ type Reminder = {
 
 const getParentAppName = (description: string) => {
   const lower = description.toLowerCase();
-  if (lower.includes('whatsapp')) return 'WhatsApp';
-  if (lower.includes('brave')) return 'Brave';
-  if (lower.includes('code') || lower.includes('vscode') || lower.includes('.tsx') || lower.includes('.ts') || lower.includes('.js')) return 'VS Code';
-  if (lower.includes('figma')) return 'Figma';
   if (lower.includes('antigravity')) return 'Antigravity';
   if (lower.includes('astra')) return 'ASTRA Tracker';
+  if (lower.includes('whatsapp')) return 'WhatsApp';
+  if (lower.includes('brave')) return 'Brave';
   if (lower.includes('chrome')) return 'Chrome';
+  if (lower.includes('figma')) return 'Figma';
   if (lower.includes('discord')) return 'Discord';
   if (lower.includes('slack')) return 'Slack';
   if (lower.includes('youtube')) return 'YouTube';
   if (lower.includes('github')) return 'GitHub';
+  if (lower.includes('code') || lower.includes('vscode') || lower.includes('.tsx') || lower.includes('.ts') || lower.includes('.js')) return 'VS Code';
   if (lower.includes('terminal') || lower.includes('cmd') || lower.includes('powershell')) return 'Terminal';
   if (lower.includes('explorer') || lower.includes('.exe')) return 'Windows OS';
   
