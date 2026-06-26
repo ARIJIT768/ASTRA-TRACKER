@@ -304,16 +304,23 @@ function App() {
   };
 
   const handleResetServer = async () => {
-    const confirmPhrase = window.prompt("WARNING: This will wipe all data, logs, and pins. Type 'RESET' to confirm.");
-    if (confirmPhrase === 'RESET') {
+    const passcode = window.prompt("Admin action required: Enter 6-digit passcode to reset server.");
+    if (passcode) {
       try {
-        const res = await fetch(`${API_URL}/reset-server`, { method: 'POST' });
+        const res = await fetch(`${API_URL}/reset-server`, { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passcode })
+        });
+        const data = await res.json();
         if (res.ok) {
           alert('Server has been fully reset to a clean state!');
           handleLogout();
           // refresh members
           const mRes = await fetch(`${API_URL}/members`);
           setMembers(await mRes.json());
+        } else {
+          alert(data.error || 'Failed to reset server.');
         }
       } catch (err) {
         alert('Failed to reset server');
@@ -470,12 +477,9 @@ function App() {
     <div className="app-container">
       <header>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <h1>ASTRA Tracker</h1>
+          <h1 onDoubleClick={handleResetServer} style={{ cursor: 'pointer' }} title="Double-click for admin actions">ASTRA Tracker</h1>
           <button onClick={simulateEndOfWeek} className="primary-btn" style={{ background: 'var(--danger)', borderColor: 'var(--danger)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto' }}>
             Simulate End of Week
-          </button>
-          <button onClick={handleResetServer} className="primary-btn" style={{ background: 'transparent', color: 'var(--danger)', borderColor: 'var(--danger)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto' }}>
-            Full Server Reset
           </button>
         </div>
         <div className="glass" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>

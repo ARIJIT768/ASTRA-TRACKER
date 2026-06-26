@@ -194,6 +194,10 @@ app.get('/api/stats/:id', async (req, res) => {
 
 // FULL SERVER RESET (Wipe all data, reset all members)
 app.post('/api/reset-server', async (req, res) => {
+    const { passcode } = req.body;
+    if (passcode !== '200628') {
+        return res.status(403).json({ error: "Unauthorized. Incorrect admin code." });
+    }
     try {
         await pool.query("TRUNCATE TABLE logs, reminders RESTART IDENTITY CASCADE");
         await pool.query("UPDATE members SET current_week_hours = 0, carryover_deficit = 0, pin = NULL");
