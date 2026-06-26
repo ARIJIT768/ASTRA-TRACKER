@@ -159,6 +159,15 @@ h1::after {
   letter-spacing: -0.5px;
 }
 
+.stat-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
 /* Tab Navigation */
 .tab-button {
   background: none;

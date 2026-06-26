@@ -195,6 +195,7 @@ function App() {
   const [members, setMembers] = useState<Member[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [stats, setStats] = useState<{ daily: number, weekly: number, monthly: number, yearly: number } | null>(null);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'team'>('dashboard');
   
   const [loggedInMember, setLoggedInMember] = useState<Member | null>(() => {
@@ -225,10 +226,11 @@ function App() {
 
   const fetchDashboardData = async (memberId: number) => {
     try {
-      const [membersRes, logsRes, remRes] = await Promise.all([
+      const [membersRes, logsRes, remRes, statsRes] = await Promise.all([
         fetch(`${API_URL}/members`),
         fetch(`${API_URL}/logs/${memberId}`),
-        fetch(`${API_URL}/reminders/${memberId}`)
+        fetch(`${API_URL}/reminders/${memberId}`),
+        fetch(`${API_URL}/stats/${memberId}`)
       ]);
       
       const allMembers = await membersRes.json();
@@ -239,6 +241,7 @@ function App() {
 
       setLogs(await logsRes.json());
       setReminders(await remRes.json());
+      setStats(await statsRes.json());
     } catch (err) {
       console.error('Failed to fetch dashboard data', err);
     }
@@ -297,6 +300,24 @@ function App() {
       }
     } catch(err) {
       alert('Failed to simulate end of week');
+    }
+  };
+
+  const handleResetServer = async () => {
+    const confirmPhrase = window.prompt("WARNING: This will wipe all data, logs, and pins. Type 'RESET' to confirm.");
+    if (confirmPhrase === 'RESET') {
+      try {
+        const res = await fetch(`${API_URL}/reset-server`, { method: 'POST' });
+        if (res.ok) {
+          alert('Server has been fully reset to a clean state!');
+          handleLogout();
+          // refresh members
+          const mRes = await fetch(`${API_URL}/members`);
+          setMembers(await mRes.json());
+        }
+      } catch (err) {
+        alert('Failed to reset server');
+      }
     }
   };
 
@@ -453,6 +474,9 @@ function App() {
           <button onClick={simulateEndOfWeek} className="primary-btn" style={{ background: 'var(--danger)', borderColor: 'var(--danger)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto' }}>
             Simulate End of Week
           </button>
+          <button onClick={handleResetServer} className="primary-btn" style={{ background: 'transparent', color: 'var(--danger)', borderColor: 'var(--danger)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto' }}>
+            Full Server Reset
+          </button>
         </div>
         <div className="glass" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
            <span style={{ color: 'var(--success)', fontWeight: '500' }}>{loggedInMember.name}</span>
@@ -469,20 +493,43 @@ function App() {
         <div className="dashboard-grid">
           <div className="main-content">
             <div className="panel glass animate-stagger-1">
-              <h2>Your Weekly Progress</h2>
+              <h2>Deep Analytics</h2>
               {deficit > 0 && (
                 <div style={{ background: 'rgba(255,0,85,0.1)', color: 'var(--danger)', padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid var(--danger)', marginBottom: '1rem', fontWeight: 'bold' }}>
                   ⚠️ You have a carryover deficit penalty of {deficit.toFixed(2)} hours from last week!
                 </div>
               )}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', padding: '1rem 0' }}>
-                <div style={{ fontSize: '4.5rem', fontWeight: '800', fontFamily: 'Outfit', color: isSuccess ? 'var(--success)' : 'var(--text-primary)', textShadow: `0 0 20px ${isSuccess ? 'rgba(0,255,136,0.3)' : 'transparent'}` }}>
-                  {currentHours.toFixed(2)}<span style={{ fontSize: '2rem', color: 'var(--text-secondary)' }}>h</span>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', padding: '1rem 0' }}>
+                <div className="stat-card glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '16px', borderLeft: '4px solid var(--accent-primary)', transition: 'transform 0.3s ease' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Today</span>
+                  <div style={{ fontSize: '2.8rem', fontWeight: '800', fontFamily: 'Outfit', color: 'var(--text-primary)' }}>
+                    {stats?.daily?.toFixed(2) || '0.00'}<span style={{ fontSize: '1.4rem', color: 'var(--text-secondary)' }}>h</span>
+                  </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ color: 'var(--text-secondary)', marginBottom: '0.8rem', fontWeight: '500' }}>Weekly Target Goal: {totalTarget.toFixed(2)} hours</p>
-                  <div className="progress-container">
+
+                <div className="stat-card glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '16px', borderLeft: '4px solid var(--success)', transition: 'transform 0.3s ease' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>This Week</span>
+                  <div style={{ fontSize: '2.8rem', fontWeight: '800', fontFamily: 'Outfit', color: isSuccess ? 'var(--success)' : 'var(--text-primary)', textShadow: isSuccess ? '0 0 20px rgba(0,255,136,0.3)' : 'none' }}>
+                    {stats?.weekly?.toFixed(2) || currentHours.toFixed(2)}<span style={{ fontSize: '1.4rem', color: 'var(--text-secondary)' }}>h</span>
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Goal: {totalTarget.toFixed(2)}h</div>
+                  <div className="progress-container" style={{ marginTop: '0.2rem', height: '6px', width: '100%' }}>
                     <div className="progress-bar" style={{ width: `${progressPercent}%`, background: isSuccess ? 'var(--success)' : 'var(--accent-primary)', boxShadow: `0 0 10px ${isSuccess ? 'var(--success)' : 'var(--accent-primary)'}` }}></div>
+                  </div>
+                </div>
+
+                <div className="stat-card glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '16px', borderLeft: '4px solid #ff00aa', transition: 'transform 0.3s ease' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>This Month</span>
+                  <div style={{ fontSize: '2.8rem', fontWeight: '800', fontFamily: 'Outfit', color: 'var(--text-primary)' }}>
+                    {stats?.monthly?.toFixed(2) || '0.00'}<span style={{ fontSize: '1.4rem', color: 'var(--text-secondary)' }}>h</span>
+                  </div>
+                </div>
+
+                <div className="stat-card glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '16px', borderLeft: '4px solid #ffaa00', transition: 'transform 0.3s ease' }}>
+                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>This Year</span>
+                  <div style={{ fontSize: '2.8rem', fontWeight: '800', fontFamily: 'Outfit', color: 'var(--text-primary)' }}>
+                    {stats?.yearly?.toFixed(2) || '0.00'}<span style={{ fontSize: '1.4rem', color: 'var(--text-secondary)' }}>h</span>
                   </div>
                 </div>
               </div>
@@ -572,6 +619,36 @@ function App() {
               <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
                 Summary of total weekly hours and quota progress for all members.
               </p>
+
+              <div className="panel glass animate-stagger-2" style={{ marginBottom: '2rem', borderLeft: '4px solid #00f0ff', background: 'rgba(0,0,0,0.2)' }}>
+                <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#fff' }}>🤖 ASTRA Insights</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                  {(() => {
+                    const sorted = [...members].sort((a, b) => (b.current_week_hours || 0) - (a.current_week_hours || 0));
+                    const top = sorted[0];
+                    const bottom = sorted[sorted.length - 1];
+                    const isBottomFailing = bottom && (bottom.current_week_hours || 0) < ((bottom.weekly_target_hours || 0) + (bottom.carryover_deficit || 0)) * 0.5;
+                    
+                    return (
+                      <>
+                        {top && (top.current_week_hours || 0) > 0 && (
+                          <div style={{ padding: '1rem', background: 'rgba(0, 255, 136, 0.05)', borderRadius: '8px', border: '1px solid rgba(0, 255, 136, 0.2)' }}>
+                            <strong style={{ color: 'var(--success)' }}>🏆 Top Performer:</strong> {top.name} is leading the team with {(top.current_week_hours || 0).toFixed(2)} hours logged this week! Outstanding dedication.
+                          </div>
+                        )}
+                        {isBottomFailing && (
+                          <div style={{ padding: '1rem', background: 'rgba(255, 0, 85, 0.05)', borderRadius: '8px', border: '1px solid rgba(255, 0, 85, 0.2)' }}>
+                            <strong style={{ color: 'var(--danger)' }}>⚠️ Falling Behind:</strong> {bottom.name} is currently significantly behind their weekly quota. ASTRA recommends prioritizing focused work sessions.
+                          </div>
+                        )}
+                        <div style={{ padding: '1rem', background: 'rgba(0, 240, 255, 0.05)', borderRadius: '8px', border: '1px solid rgba(0, 240, 255, 0.2)' }}>
+                          <strong style={{ color: 'var(--accent-primary)' }}>💡 Suggestion:</strong> Break down larger tasks into 2-hour deep work blocks to improve tracking consistency across the team.
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                 {[...members].sort((a, b) => (b.current_week_hours || 0) - (a.current_week_hours || 0)).map((m, idx) => {

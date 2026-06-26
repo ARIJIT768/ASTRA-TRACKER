@@ -173,6 +173,36 @@ app.post('/api/reminders/:id/read', async (req, res) => {
     }
 });
 
+// Deep Analytics (Daily, Weekly, Monthly, Yearly)
+app.get('/api/stats/:id', async (req, res) => {
+    const query = `
+        SELECT 
+            COALESCE(SUM(hours) FILTER (WHERE timestamp >= date_trunc('day', CURRENT_TIMESTAMP)), 0) AS daily,
+            COALESCE(SUM(hours) FILTER (WHERE timestamp >= date_trunc('week', CURRENT_TIMESTAMP)), 0) AS weekly,
+            COALESCE(SUM(hours) FILTER (WHERE timestamp >= date_trunc('month', CURRENT_TIMESTAMP)), 0) AS monthly,
+            COALESCE(SUM(hours) FILTER (WHERE timestamp >= date_trunc('year', CURRENT_TIMESTAMP)), 0) AS yearly
+        FROM logs
+        WHERE member_id = $1
+    `;
+    try {
+        const { rows } = await pool.query(query, [req.params.id]);
+        res.json(rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// FULL SERVER RESET (Wipe all data, reset all members)
+app.post('/api/reset-server', async (req, res) => {
+    try {
+        await pool.query("TRUNCATE TABLE logs, reminders RESTART IDENTITY CASCADE");
+        await pool.query("UPDATE members SET current_week_hours = 0, carryover_deficit = 0, pin = NULL");
+        res.json({ success: true, message: "Server fully reset." });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // For Vercel Serverless Functions
 module.exports = app;
 
