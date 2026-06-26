@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Chart as ChartJS, Tooltip, Legend, CategoryScale, LinearScale, Title, PointElement, LineElement, Filler } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { SiBrave, SiGooglechrome, SiDiscord, SiSlack, SiFigma, SiYoutube, SiGithub } from 'react-icons/si';
+import { 
+  SiBrave, SiGooglechrome, SiDiscord, SiSlack, SiFigma, SiYoutube, SiGithub,
+  SiOllama, SiOpenai, SiNotion, SiSpotify, SiPostman, SiDocker, SiFirefoxbrowser, 
+  SiObsidian, SiZoom, SiAndroidstudio, SiIntellijidea, SiWebstorm, SiCanva, SiTelegram, SiClaude
+} from 'react-icons/si';
 import { FaGamepad, FaTerminal, FaWhatsapp, FaSpaceShuttle, FaWindows } from 'react-icons/fa';
 import { VscVscode } from 'react-icons/vsc';
 import { MdWorkOutline } from 'react-icons/md';
@@ -41,14 +45,37 @@ const getParentAppName = (description: string) => {
   if (lower.includes('antigravity')) return 'Antigravity';
   if (lower.includes('astra')) return 'ASTRA Tracker';
   if (lower.includes('whatsapp')) return 'WhatsApp';
-  if (lower.includes('brave')) return 'Brave';
-  if (lower.includes('chrome')) return 'Chrome';
-  if (lower.includes('figma')) return 'Figma';
+  if (lower.includes('telegram')) return 'Telegram';
   if (lower.includes('discord')) return 'Discord';
   if (lower.includes('slack')) return 'Slack';
+  if (lower.includes('zoom')) return 'Zoom';
+  
+  if (lower.includes('ollama')) return 'Ollama';
+  if (lower.includes('chatgpt') || lower.includes('openai')) return 'ChatGPT';
+  if (lower.includes('claude')) return 'Claude';
+  
+  if (lower.includes('brave')) return 'Brave';
+  if (lower.includes('chrome')) return 'Chrome';
+  if (lower.includes('firefox')) return 'Firefox';
+  
+  if (lower.includes('figma')) return 'Figma';
+  if (lower.includes('canva')) return 'Canva';
+  
+  if (lower.includes('notion')) return 'Notion';
+  if (lower.includes('obsidian')) return 'Obsidian';
+  
+  if (lower.includes('spotify')) return 'Spotify';
   if (lower.includes('youtube')) return 'YouTube';
+  
   if (lower.includes('github')) return 'GitHub';
+  if (lower.includes('postman')) return 'Postman';
+  if (lower.includes('docker')) return 'Docker';
+  
+  if (lower.includes('android studio')) return 'Android Studio';
+  if (lower.includes('intellij')) return 'IntelliJ IDEA';
+  if (lower.includes('webstorm')) return 'WebStorm';
   if (lower.includes('code') || lower.includes('vscode') || lower.includes('.tsx') || lower.includes('.ts') || lower.includes('.js')) return 'VS Code';
+  
   if (lower.includes('terminal') || lower.includes('cmd') || lower.includes('powershell')) return 'Terminal';
   if (lower.includes('explorer') || lower.includes('.exe')) return 'Windows OS';
   
@@ -59,14 +86,37 @@ const getParentAppName = (description: string) => {
 const getAppIcon = (appName: string) => {
   const lower = appName.toLowerCase();
   if (lower.includes('whatsapp')) return <FaWhatsapp size={24} color="#25D366" />;
-  if (lower.includes('brave')) return <SiBrave size={24} color="#FF4724" />;
-  if (lower.includes('code') || lower.includes('vscode')) return <VscVscode size={24} color="#007ACC" />;
-  if (lower.includes('chrome')) return <SiGooglechrome size={24} color="#4285F4" />;
+  if (lower.includes('telegram')) return <SiTelegram size={24} color="#26A5E4" />;
   if (lower.includes('discord')) return <SiDiscord size={24} color="#5865F2" />;
   if (lower.includes('slack')) return <SiSlack size={24} color="#4A154B" />;
+  if (lower.includes('zoom')) return <SiZoom size={24} color="#2D8CFF" />;
+  
+  if (lower.includes('ollama')) return <SiOllama size={24} color="#FFFFFF" />;
+  if (lower.includes('chatgpt')) return <SiOpenai size={24} color="#10A37F" />;
+  if (lower.includes('claude')) return <SiClaude size={24} color="#D97757" />;
+  
+  if (lower.includes('brave')) return <SiBrave size={24} color="#FF4724" />;
+  if (lower.includes('chrome')) return <SiGooglechrome size={24} color="#4285F4" />;
+  if (lower.includes('firefox')) return <SiFirefoxbrowser size={24} color="#FF7139" />;
+  
   if (lower.includes('figma')) return <SiFigma size={24} color="#F24E1E" />;
+  if (lower.includes('canva')) return <SiCanva size={24} color="#00C4CC" />;
+  
+  if (lower.includes('notion')) return <SiNotion size={24} color="#FFFFFF" />;
+  if (lower.includes('obsidian')) return <SiObsidian size={24} color="#7A3EE8" />;
+  
+  if (lower.includes('spotify')) return <SiSpotify size={24} color="#1DB954" />;
   if (lower.includes('youtube')) return <SiYoutube size={24} color="#FF0000" />;
+  
   if (lower.includes('github')) return <SiGithub size={24} color="#FFFFFF" />;
+  if (lower.includes('postman')) return <SiPostman size={24} color="#FF6C37" />;
+  if (lower.includes('docker')) return <SiDocker size={24} color="#2496ED" />;
+  
+  if (lower.includes('android studio')) return <SiAndroidstudio size={24} color="#3DDC84" />;
+  if (lower.includes('intellij')) return <SiIntellijidea size={24} color="#000000" />;
+  if (lower.includes('webstorm')) return <SiWebstorm size={24} color="#000000" />;
+  if (lower.includes('code') || lower.includes('vscode')) return <VscVscode size={24} color="#007ACC" />;
+  
   if (lower.includes('antigravity')) return <FaSpaceShuttle size={24} color="#9900FF" />;
   if (lower.includes('game')) return <FaGamepad size={24} color="#FF00AA" />;
   if (lower.includes('terminal') || lower.includes('cmd') || lower.includes('powershell')) return <FaTerminal size={24} color="#00FF88" />;
