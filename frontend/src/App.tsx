@@ -300,36 +300,57 @@ function App() {
     }
   };
 
-  // Build professional Line Chart data (Hours over time per App)
-  const logsByDateApp = logs.reduce((acc: Record<string, Record<string, number>>, log) => {
-    const date = new Date(log.timestamp).toLocaleDateString();
-    const app = getParentAppName(log.description);
-    if (!acc[date]) acc[date] = {};
-    if (!acc[date][app]) acc[date][app] = 0;
-    acc[date][app] += log.hours;
-    return acc;
-  }, {});
-
-  const sortedDates = Object.keys(logsByDateApp).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+  // Build professional Line Chart data (Cumulative Hours over time)
+  const allApps = Array.from(new Set(logs.map(log => getParentAppName(log.description))));
   
-  if (sortedDates.length === 1) {
-    const dateObj = new Date(sortedDates[0]);
-    dateObj.setDate(dateObj.getDate() - 1);
-    const prevStr = dateObj.toLocaleDateString();
-    sortedDates.unshift(prevStr);
-    logsByDateApp[prevStr] = {};
+  // Sort logs chronologically
+  const sortedLogs = [...logs].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  
+  // Create unique timestamps for the X-axis
+  const uniqueTimestamps = Array.from(new Set(sortedLogs.map(log => {
+    const d = new Date(log.timestamp);
+    return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+  })));
+
+  const cumulativeHours: Record<string, number> = {};
+  allApps.forEach(app => cumulativeHours[app] = 0);
+
+  const datasetData: Record<string, number[]> = {};
+  allApps.forEach(app => datasetData[app] = []);
+
+  uniqueTimestamps.forEach(timeLabel => {
+    const logsAtTime = sortedLogs.filter(log => {
+      const d = new Date(log.timestamp);
+      return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` === timeLabel;
+    });
+    
+    logsAtTime.forEach(log => {
+      const app = getParentAppName(log.description);
+      cumulativeHours[app] += log.hours;
+    });
+
+    allApps.forEach(app => {
+      datasetData[app].push(cumulativeHours[app]);
+    });
+  });
+
+  // If there's only 1 point, add 'Now' so a flat line can be drawn instead of a single dot, avoiding the 0-wedge issue!
+  if (uniqueTimestamps.length === 1 && sortedLogs.length > 0) {
+    uniqueTimestamps.push('Now');
+    allApps.forEach(app => {
+      datasetData[app].push(cumulativeHours[app]);
+    });
   }
 
-  const allApps = Array.from(new Set(logs.map(log => getParentAppName(log.description))));
   const chartColors = ['#00f0ff', '#7000ff', '#ff0055', '#00ff88', '#ffaa00', '#0055ff', '#ff00aa', '#00ffff'];
 
   const lineChartData = {
-    labels: sortedDates,
+    labels: uniqueTimestamps.map(t => t.replace(new Date().toLocaleDateString() + ' ', '')), // hide date if it's today
     datasets: allApps.map((app, index) => {
       const color = chartColors[index % chartColors.length];
       return {
         label: app,
-        data: sortedDates.map(date => logsByDateApp[date]?.[app] || 0),
+        data: datasetData[app],
         borderColor: color,
         backgroundColor: color + '20', // transparent fill
         borderWidth: 2,
@@ -472,7 +493,7 @@ function App() {
             <div className="panel glass animate-stagger-3">
               <h2>App Monitor Activity</h2>
               <div style={{ height: '200px', marginBottom: '2rem', marginTop: '1rem' }}>
-                {sortedDates.length === 0 ? (
+                {uniqueTimestamps.length === 0 ? (
                   <p style={{ color: 'var(--text-secondary)' }}>No activity data for chart.</p>
                 ) : (
                   <Line data={lineChartData} options={lineChartOptions as any} />
