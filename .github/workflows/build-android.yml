@@ -28,7 +28,7 @@ jobs:
 
       - name: Install Frontend Dependencies
         working-directory: frontend
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build React App
         working-directory: frontend
@@ -37,6 +37,10 @@ jobs:
       - name: Sync Capacitor
         working-directory: frontend
         run: npx cap sync android
+
+      - name: Make gradlew executable
+        working-directory: frontend/android
+        run: chmod +x ./gradlew
 
       - name: Build Android APK
         working-directory: frontend/android
