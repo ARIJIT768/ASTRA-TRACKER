@@ -9,7 +9,7 @@ import {
   SiSafari, SiPycharm, SiOpera, SiNeovim, SiMessenger, SiLinear, SiKubernetes, SiJupyter, 
   SiJira, SiEvernote, SiEpicgames, SiBlender, SiAsana
 } from 'react-icons/si';
-import { FaGamepad, FaTerminal, FaWhatsapp, FaSpaceShuttle, FaWindows } from 'react-icons/fa';
+import { FaGamepad, FaTerminal, FaWhatsapp, FaSpaceShuttle, FaWindows, FaAndroid } from 'react-icons/fa';
 import { VscVscode } from 'react-icons/vsc';
 import { MdWorkOutline } from 'react-icons/md';
 import CompanyChat from './components/CompanyChat';
@@ -487,6 +487,12 @@ function App() {
           <button onClick={simulateEndOfWeek} className="primary-btn" style={{ background: 'var(--danger)', borderColor: 'var(--danger)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto' }}>
             Simulate End of Week
           </button>
+          <a href="https://nightly.link/ARIJIT768/ASTRA-TRACKER/workflows/build-android.yml/main/ASTRA-Tracker-App.zip" download className="primary-btn" style={{ background: 'var(--accent-secondary)', borderColor: 'var(--accent-secondary)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <FaAndroid /> Android App
+          </a>
+          <a href="https://github.com/ARIJIT768/ASTRA-TRACKER/releases" target="_blank" className="primary-btn" style={{ background: 'var(--accent-primary)', borderColor: 'var(--accent-primary)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <FaWindows /> Desktop App
+          </a>
         </div>
         <div className="glass header-actions" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
            <span style={{ color: 'var(--success)', fontWeight: '500' }}>{loggedInMember.name}</span>

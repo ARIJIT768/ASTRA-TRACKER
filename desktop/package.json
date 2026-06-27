@@ -1,0 +1,41 @@
+{
+  "name": "astra-desktop",
+  "version": "1.0.0",
+  "description": "ASTRA Tracker Desktop App",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder -w"
+  },
+  "build": {
+    "appId": "com.astra.tracker.desktop",
+    "productName": "ASTRA Tracker",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "extraResources": [
+      {
+        "from": "../frontend/dist",
+        "to": "dist"
+      },
+      {
+        "from": "../backend",
+        "to": "backend"
+      }
+    ]
+  },
+  "author": "ASTRA",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "electron": "^42.5.0",
+    "electron-builder": "^26.15.3",
+    "wait-on": "^9.0.10"
+  }
+}
