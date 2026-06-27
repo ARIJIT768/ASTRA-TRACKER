@@ -197,7 +197,13 @@ function App() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [stats, setStats] = useState<{ daily: number, weekly: number, monthly: number, yearly: number } | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'team' | 'chat'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'team' | 'chat'>(() => {
+    return (sessionStorage.getItem('astra_active_tab') as any) || 'dashboard';
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem('astra_active_tab', activeTab);
+  }, [activeTab]);
   
   const [loggedInMember, setLoggedInMember] = useState<Member | null>(() => {
     const saved = localStorage.getItem('astra_user');

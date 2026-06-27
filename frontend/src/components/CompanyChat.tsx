@@ -77,6 +77,16 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
   const [password, setPassword] = useState('');
   const [cryptoKey, setCryptoKey] = useState<CryptoKey | null>(null);
   
+  useEffect(() => {
+    // Restore session on refresh
+    if (sessionStorage.getItem('astra_chat_unlocked') === 'true') {
+      deriveKey("ASTRA_SHARED_COMPANY_CHAT_KEY_2026").then(key => {
+        setCryptoKey(key);
+        setIsUnlocked(true);
+      });
+    }
+  }, []);
+  
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState('');
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -144,6 +154,7 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
       const key = await deriveKey("ASTRA_SHARED_COMPANY_CHAT_KEY_2026");
       setCryptoKey(key);
       setIsUnlocked(true);
+      sessionStorage.setItem('astra_chat_unlocked', 'true');
     } catch (e) {
       alert("Failed to setup encryption keys or verify PIN.");
     }
@@ -235,7 +246,7 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
              <span style={{ color: '#8696a0', fontSize: '13px' }}>End-to-end encrypted</span>
           </div>
         </div>
-        <button onClick={() => { setIsUnlocked(false); setCryptoKey(null); setPassword(''); }} style={{ background: 'transparent', border: 'none', color: '#8696a0', cursor: 'pointer', fontSize: '14px', padding: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+        <button onClick={() => { setIsUnlocked(false); setCryptoKey(null); setPassword(''); sessionStorage.removeItem('astra_chat_unlocked'); }} style={{ background: 'transparent', border: 'none', color: '#8696a0', cursor: 'pointer', fontSize: '14px', padding: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
            🔒 Lock
         </button>
       </div>
@@ -253,7 +264,7 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
           return (
             <div key={idx} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '70%', minWidth: '120px', display: 'flex', flexDirection: 'column' }}>
               <div style={{ 
-                background: isMe ? 'var(--accent-primary)' : 'rgba(255,255,255,0.08)', 
+                background: isMe ? '#3b82f6' : 'rgba(255,255,255,0.08)', 
                 color: '#fff',
                 padding: '8px 12px', 
                 borderRadius: '12px',
@@ -262,7 +273,7 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
                 boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
                 position: 'relative'
               }}>
-                {showName && <div style={{ fontSize: '12px', color: isMe ? 'rgba(255,255,255,0.8)' : 'var(--accent-primary)', fontWeight: 600, marginBottom: '4px' }}>{msg.member_name}</div>}
+                {showName && <div style={{ fontSize: '12px', color: isMe ? 'rgba(255,255,255,0.85)' : '#60a5fa', fontWeight: 600, marginBottom: '4px' }}>{msg.member_name}</div>}
                 
                 {msg.decryptedFileData && (
                   <div style={{ marginBottom: msg.decryptedContent ? '5px' : '0' }}>
@@ -274,7 +285,7 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
                     )}
                     {!msg.file_type?.startsWith('image/') && !msg.file_type?.startsWith('video/') && (
                       <a href={msg.decryptedFileData} download={msg.file_name || 'document'} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', textDecoration: 'none', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '6px', fontSize: '14px' }}>
-                        <div style={{ background: 'var(--accent-primary)', padding: '8px', borderRadius: '50%' }}>📄</div> {msg.file_name}
+                        <div style={{ background: '#3b82f6', padding: '8px', borderRadius: '50%' }}>📄</div> {msg.file_name}
                       </a>
                     )}
                   </div>
@@ -325,7 +336,7 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
             placeholder="Type a message..."
             style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: '24px', fontSize: '15px', outline: 'none' }}
           />
-          <button type="submit" disabled={isSending} style={{ background: 'var(--accent-primary)', color: '#fff', border: 'none', borderRadius: '50%', width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px' }}>
+          <button type="submit" disabled={isSending} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '50%', width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px' }}>
             {isSending ? '⋯' : '➤'}
           </button>
         </form>
