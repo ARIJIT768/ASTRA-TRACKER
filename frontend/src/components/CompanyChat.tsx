@@ -235,7 +235,7 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
   }
 
   return (
-    <div style={{ height: 'calc(100vh - 180px)', maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', borderRadius: '12px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)' }}>
+    <div className="chat-container">
       
       {/* Header */}
       <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>

@@ -481,19 +481,19 @@ function App() {
   return (
     <div className="app-container">
       <header>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
           <h1 onDoubleClick={handleResetServer} style={{ cursor: 'pointer' }} title="Double-click for admin actions">ASTRA Tracker</h1>
           <button onClick={simulateEndOfWeek} className="primary-btn" style={{ background: 'var(--danger)', borderColor: 'var(--danger)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto' }}>
             Simulate End of Week
           </button>
         </div>
-        <div className="glass" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="glass header-actions" style={{ padding: '0.5rem 1rem', display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
            <span style={{ color: 'var(--success)', fontWeight: '500' }}>{loggedInMember.name}</span>
            <button onClick={handleLogout} className="primary-btn" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem', width: 'auto' }}>Logout</button>
         </div>
       </header>
 
-      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2rem', padding: '0 1rem' }}>
+      <div className="tabs-container" style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2rem', padding: '0 1rem', overflowX: 'auto', whiteSpace: 'nowrap' }}>
         <button className={`tab-button ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>My Dashboard</button>
         <button className={`tab-button ${activeTab === 'team' ? 'active' : ''}`} onClick={() => setActiveTab('team')}>Team Activity</button>
         <button className={`tab-button ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}>Company Chat</button>
