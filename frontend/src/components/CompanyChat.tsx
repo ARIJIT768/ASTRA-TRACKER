@@ -211,12 +211,12 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
   }
 
   return (
-    <div style={{ height: 'calc(100vh - 180px)', maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: '#0b141a', fontFamily: '"Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif' }}>
+    <div style={{ height: 'calc(100vh - 180px)', maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', borderRadius: '12px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)' }}>
       
-      {/* WhatsApp Style Header */}
-      <div style={{ padding: '10px 16px', background: '#202c33', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
+      {/* Header */}
+      <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#00a884', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>🏢</div>
+          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>🏢</div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
              <span style={{ color: '#e9edef', fontSize: '16px', fontWeight: 500 }}>ASTRA Company Chat</span>
              <span style={{ color: '#8696a0', fontSize: '13px' }}>End-to-end encrypted</span>
@@ -227,29 +227,29 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
         </button>
       </div>
 
-      {/* WhatsApp Style Feed */}
+      {/* Feed */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px 5%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ background: '#182229', color: '#ffeecd', fontSize: '12.5px', padding: '8px 12px', borderRadius: '8px', alignSelf: 'center', textAlign: 'center', marginBottom: '15px', maxWidth: '90%' }}>
+        <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary)', fontSize: '12.5px', padding: '8px 12px', borderRadius: '8px', alignSelf: 'center', textAlign: 'center', marginBottom: '15px', maxWidth: '90%' }}>
           🔒 Messages and calls are end-to-end encrypted. No one outside of this chat, not even ASTRA, can read or listen to them.
         </div>
         
         {messages.map((msg, idx) => {
           const isMe = msg.member_id === loggedInMember.id;
-          const showName = !isMe && (idx === 0 || messages[idx-1].member_id !== msg.member_id);
+          const showName = idx === 0 || messages[idx-1].member_id !== msg.member_id;
           
           return (
-            <div key={idx} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '65%', minWidth: '120px', display: 'flex', flexDirection: 'column' }}>
+            <div key={idx} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '70%', minWidth: '120px', display: 'flex', flexDirection: 'column' }}>
               <div style={{ 
-                background: isMe ? '#005c4b' : '#202c33', 
-                color: '#e9edef',
-                padding: '6px 9px 8px 9px', 
-                borderRadius: '7.5px',
-                borderTopRightRadius: isMe ? '0' : '7.5px',
-                borderTopLeftRadius: !isMe ? '0' : '7.5px',
-                boxShadow: '0 1px 0.5px rgba(11,20,26,.13)',
+                background: isMe ? 'var(--accent-primary)' : 'rgba(255,255,255,0.08)', 
+                color: '#fff',
+                padding: '8px 12px', 
+                borderRadius: '12px',
+                borderBottomRightRadius: isMe ? '2px' : '12px',
+                borderBottomLeftRadius: !isMe ? '2px' : '12px',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
                 position: 'relative'
               }}>
-                {showName && <div style={{ fontSize: '12.5px', color: '#53bdeb', fontWeight: 500, marginBottom: '2px' }}>{msg.member_name}</div>}
+                {showName && <div style={{ fontSize: '12px', color: isMe ? 'rgba(255,255,255,0.8)' : 'var(--accent-primary)', fontWeight: 600, marginBottom: '4px' }}>{msg.member_name}</div>}
                 
                 {msg.decryptedFileData && (
                   <div style={{ marginBottom: msg.decryptedContent ? '5px' : '0' }}>
@@ -260,20 +260,20 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
                       <video src={msg.decryptedFileData} controls style={{ width: '100%', borderRadius: '6px', maxHeight: '300px' }} />
                     )}
                     {!msg.file_type?.startsWith('image/') && !msg.file_type?.startsWith('video/') && (
-                      <a href={msg.decryptedFileData} download={msg.file_name || 'document'} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#e9edef', textDecoration: 'none', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '6px', fontSize: '14px' }}>
-                        <div style={{ background: '#00a884', padding: '8px', borderRadius: '50%' }}>📄</div> {msg.file_name}
+                      <a href={msg.decryptedFileData} download={msg.file_name || 'document'} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', textDecoration: 'none', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '6px', fontSize: '14px' }}>
+                        <div style={{ background: 'var(--accent-primary)', padding: '8px', borderRadius: '50%' }}>📄</div> {msg.file_name}
                       </a>
                     )}
                   </div>
                 )}
                 
                 {msg.decryptionFailed ? (
-                   <span style={{ color: '#f15c6d', fontStyle: 'italic', fontSize: '14.2px' }}>[Encrypted Message]</span>
+                   <span style={{ color: 'var(--danger)', fontStyle: 'italic', fontSize: '14px' }}>[Encrypted Message]</span>
                 ) : (
-                   <span style={{ fontSize: '14.2px', lineHeight: '19px', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{msg.decryptedContent}</span>
+                   <span style={{ fontSize: '14px', lineHeight: '20px', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{msg.decryptedContent}</span>
                 )}
                 
-                <div style={{ float: 'right', fontSize: '11px', color: 'rgba(255,255,255,0.6)', marginLeft: '10px', marginTop: '4px', height: '15px' }}>
+                <div style={{ float: 'right', fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginLeft: '10px', marginTop: '4px', height: '15px' }}>
                   {new Date(msg.timestamp).toLocaleString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
@@ -283,8 +283,8 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
         <div ref={messagesEndRef} />
       </div>
 
-      {/* WhatsApp Style Input Area */}
-      <div style={{ background: '#202c33', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Input Area */}
+      <div style={{ background: 'rgba(0,0,0,0.3)', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         {attachment && (
           <div style={{ position: 'absolute', bottom: '70px', left: '20px', background: '#2a3942', padding: '10px 15px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.2)', color: '#e9edef' }}>
             📄 {attachment.name} 
@@ -309,10 +309,10 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
             type="text" 
             value={draft}
             onChange={e => setDraft(e.target.value)}
-            placeholder="Type a message"
-            style={{ flex: 1, background: '#2a3942', color: '#d1d7db', border: 'none', padding: '9px 12px', borderRadius: '8px', fontSize: '15px', outline: 'none' }}
+            placeholder="Type a message..."
+            style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: '24px', fontSize: '15px', outline: 'none' }}
           />
-          <button type="submit" disabled={isSending} style={{ background: '#00a884', color: '#111b21', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px' }}>
+          <button type="submit" disabled={isSending} style={{ background: 'var(--accent-primary)', color: '#fff', border: 'none', borderRadius: '50%', width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px' }}>
             {isSending ? '⋯' : '➤'}
           </button>
         </form>
