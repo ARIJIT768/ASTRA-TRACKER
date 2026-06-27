@@ -134,26 +134,21 @@ app.post('/api/end-week', async (req, res) => {
         const { rows: members } = await pool.query("SELECT id, name, weekly_target_hours, current_week_hours, carryover_deficit FROM members");
         
         for (const member of members) {
-            const totalRequired = member.weekly_target_hours + member.carryover_deficit;
-            let newDeficit = member.carryover_deficit;
+            const totalRequired = member.weekly_target_hours;
             let message = "";
             
             if (member.current_week_hours < totalRequired) {
                 const missedBy = totalRequired - member.current_week_hours;
-                newDeficit += missedBy;
-                message = `🚨 CRITICAL WARNING: You missed your quota by ${missedBy.toFixed(2)} hours this week. Your deficit penalty has been applied. Your new target for next week is ${(member.weekly_target_hours + newDeficit).toFixed(2)} hours. Get to work!`;
+                message = `🚨 CRITICAL WARNING: You missed your quota by ${missedBy.toFixed(2)} hours this week. You must hit your target of ${member.weekly_target_hours.toFixed(2)} hours next week!`;
             } else {
-                // If they did extra work, it reduces their deficit (if they have one)
-                const extraHours = member.current_week_hours - totalRequired;
-                newDeficit = Math.max(0, newDeficit - extraHours);
                 message = `✅ Great job! You successfully met your weekly target.`;
             }
             
             // Add reminder
             await pool.query("INSERT INTO reminders (member_id, message) VALUES ($1, $2)", [member.id, message]);
             
-            // Reset current week and update deficit
-            await pool.query("UPDATE members SET current_week_hours = 0, carryover_deficit = $1 WHERE id = $2", [newDeficit, member.id]);
+            // Reset current week and carryover deficit (so it stays 0)
+            await pool.query("UPDATE members SET current_week_hours = 0, carryover_deficit = 0 WHERE id = $2", [member.id]);
         }
         
         res.json({ success: true, message: "Weekly rollover executed successfully" });

@@ -468,11 +468,9 @@ function App() {
   }
 
   const currentHours = loggedInMember.current_week_hours || 0;
-  const deficit = loggedInMember.carryover_deficit || 0;
   const targetHours = loggedInMember.weekly_target_hours || 0;
-  const totalTarget = targetHours + deficit;
-  const progressPercent = totalTarget > 0 ? Math.min(100, (currentHours / totalTarget) * 100) : 0;
-  const isSuccess = currentHours >= totalTarget;
+  const progressPercent = targetHours > 0 ? Math.min(100, (currentHours / targetHours) * 100) : 0;
+  const isSuccess = currentHours >= targetHours;
 
   return (
     <div className="app-container">
@@ -500,12 +498,6 @@ function App() {
           <div className="main-content">
             <div className="panel glass animate-stagger-1">
               <h2>Deep Analytics</h2>
-              {deficit > 0 && (
-                <div style={{ background: 'rgba(255,0,85,0.1)', color: 'var(--danger)', padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid var(--danger)', marginBottom: '1rem', fontWeight: 'bold' }}>
-                  ⚠️ You have a carryover deficit penalty of {deficit.toFixed(2)} hours from last week!
-                </div>
-              )}
-              
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', padding: '1rem 0' }}>
                 <div className="stat-card glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '16px', borderLeft: '4px solid var(--accent-primary)', transition: 'transform 0.3s ease' }}>
                   <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Today</span>
@@ -519,7 +511,7 @@ function App() {
                   <div style={{ fontSize: '2.8rem', fontWeight: '800', fontFamily: 'Outfit', color: isSuccess ? 'var(--success)' : 'var(--text-primary)', textShadow: isSuccess ? '0 0 20px rgba(0,255,136,0.3)' : 'none' }}>
                     {stats?.weekly?.toFixed(2) || currentHours.toFixed(2)}<span style={{ fontSize: '1.4rem', color: 'var(--text-secondary)' }}>h</span>
                   </div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Goal: {totalTarget.toFixed(2)}h</div>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Goal: {targetHours.toFixed(2)}h</span>
                   <div className="progress-container" style={{ marginTop: '0.2rem', height: '6px', width: '100%' }}>
                     <div className="progress-bar" style={{ width: `${progressPercent}%`, background: isSuccess ? 'var(--success)' : 'var(--accent-primary)', boxShadow: `0 0 10px ${isSuccess ? 'var(--success)' : 'var(--accent-primary)'}` }}></div>
                   </div>
@@ -634,7 +626,7 @@ function App() {
                     const top = sorted[0];
                     const bottom = sorted[sorted.length - 1];
                     const isWeekStarted = top && (top.current_week_hours || 0) > 0;
-                    const isBottomFailing = isWeekStarted && bottom && (bottom.current_week_hours || 0) < ((bottom.weekly_target_hours || 0) + (bottom.carryover_deficit || 0)) * 0.5;
+                    const isBottomFailing = isWeekStarted && bottom && (bottom.current_week_hours || 0) < (bottom.weekly_target_hours || 0) * 0.5;
                     
                     return (
                       <>
@@ -659,7 +651,7 @@ function App() {
               
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                 {[...members].sort((a, b) => (b.current_week_hours || 0) - (a.current_week_hours || 0)).map((m, idx) => {
-                  const target = (m.weekly_target_hours || 0) + (m.carryover_deficit || 0);
+                  const target = (m.weekly_target_hours || 0);
                   const currentHours = m.current_week_hours || 0;
                   const percent = target > 0 ? Math.min(100, (currentHours / target) * 100) : 0;
                   const isSuccess = currentHours >= target;
@@ -684,7 +676,6 @@ function App() {
                       
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                         <span>Target: {target.toFixed(2)}h</span>
-                        {(m.carryover_deficit || 0) > 0 && <span style={{ color: 'var(--danger)' }}>Penalty: {(m.carryover_deficit || 0).toFixed(2)}h</span>}
                       </div>
                     </div>
                   );
