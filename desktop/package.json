@@ -15,8 +15,9 @@
     },
     "win": {
       "target": [
-        "portable"
-      ]
+        "nsis"
+      ],
+      "icon": "build/icon.png"
     },
     "extraResources": [
       {

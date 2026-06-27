@@ -10,8 +10,7 @@ function createWindow() {
     width: 1280,
     height: 800,
     autoHideMenuBar: true,
-    titleBarStyle: 'hiddenInset',
-    backgroundColor: '#0e0e11',
+    icon: path.join(__dirname, 'build/icon.png'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
