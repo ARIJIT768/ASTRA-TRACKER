@@ -200,6 +200,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'team' | 'chat'>(() => {
     return (sessionStorage.getItem('astra_active_tab') as any) || 'dashboard';
   });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     sessionStorage.setItem('astra_active_tab', activeTab);
@@ -493,10 +494,17 @@ function App() {
         </div>
       </header>
 
-      <div className="tabs-container" style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2rem', padding: '0 1rem', overflowX: 'auto', whiteSpace: 'nowrap' }}>
-        <button className={`tab-button ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>My Dashboard</button>
-        <button className={`tab-button ${activeTab === 'team' ? 'active' : ''}`} onClick={() => setActiveTab('team')}>Team Activity</button>
-        <button className={`tab-button ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}>Company Chat</button>
+      <div className="mobile-menu-bar" style={{ display: 'none', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0 1rem' }}>
+        <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Navigation</h2>
+        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>
+          ☰
+        </button>
+      </div>
+
+      <div className={`tabs-container ${isMobileMenuOpen ? 'open' : ''}`} style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2rem', padding: '0 1rem', overflowX: 'auto', whiteSpace: 'nowrap', transition: 'max-height 0.3s ease' }}>
+        <button className={`tab-button ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => { setActiveTab('dashboard'); setIsMobileMenuOpen(false); }}>My Dashboard</button>
+        <button className={`tab-button ${activeTab === 'team' ? 'active' : ''}`} onClick={() => { setActiveTab('team'); setIsMobileMenuOpen(false); }}>Team Activity</button>
+        <button className={`tab-button ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => { setActiveTab('chat'); setIsMobileMenuOpen(false); }}>Company Chat</button>
       </div>
 
       {activeTab === 'dashboard' && (
