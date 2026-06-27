@@ -493,7 +493,7 @@ function App() {
               <a href="https://nightly.link/ARIJIT768/ASTRA-TRACKER/workflows/build-android.yml/main/ASTRA-Tracker-App.zip" download className="primary-btn" style={{ background: 'var(--accent-secondary)', borderColor: 'var(--accent-secondary)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <FaAndroid /> Android App
               </a>
-              <a href="https://github.com/ARIJIT768/ASTRA-TRACKER/releases" target="_blank" className="primary-btn" style={{ background: 'var(--accent-primary)', borderColor: 'var(--accent-primary)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <a href="https://nightly.link/ARIJIT768/ASTRA-TRACKER/workflows/build-desktop.yml/main/ASTRA-Tracker-Windows.zip" download className="primary-btn" style={{ background: 'var(--accent-primary)', borderColor: 'var(--accent-primary)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <FaWindows /> Desktop App
               </a>
             </>
