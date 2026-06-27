@@ -15,6 +15,8 @@ import { MdWorkOutline } from 'react-icons/md';
 import CompanyChat from './components/CompanyChat';
 import { Capacitor } from '@capacitor/core';
 
+const isElectron = navigator.userAgent.toLowerCase().includes('electron');
+
 ChartJS.register(Tooltip, Legend, CategoryScale, LinearScale, Title, PointElement, LineElement, Filler);
 
 const API_URL = 'https://astra-tracker-mu.vercel.app/api';
@@ -202,6 +204,7 @@ function App() {
     return (sessionStorage.getItem('astra_active_tab') as any) || 'dashboard';
   });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isTracking, setIsTracking] = useState(false);
 
   useEffect(() => {
     sessionStorage.setItem('astra_active_tab', activeTab);
@@ -488,7 +491,7 @@ function App() {
           <button onClick={simulateEndOfWeek} className="primary-btn" style={{ background: 'var(--danger)', borderColor: 'var(--danger)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto' }}>
             Simulate End of Week
           </button>
-          {!Capacitor.isNativePlatform() && (
+          {!Capacitor.isNativePlatform() && !isElectron && (
             <>
               <a href="https://nightly.link/ARIJIT768/ASTRA-TRACKER/workflows/build-android.yml/main/ASTRA-Tracker-App.zip" download className="primary-btn" style={{ background: 'var(--accent-secondary)', borderColor: 'var(--accent-secondary)', fontSize: '0.75rem', padding: '0.3rem 0.8rem', width: 'auto', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <FaAndroid /> Android App
@@ -621,13 +624,43 @@ function App() {
             <div className="panel glass animate-stagger-5">
               <h2>ASTRA Agent</h2>
               <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
-                <a href="/ASTRA_Tracker.exe" download className="primary-btn" style={{ textDecoration: 'none', display: 'inline-block', marginBottom: '1rem', width: '100%', boxSizing: 'border-box' }}>
-                  📥 Download Windows Tracker
-                </a>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                  Activity tracking is <strong>fully automated</strong>.<br /><br />
-                  Download the standalone `.exe` agent, log in with your PIN, and leave it running to hit your weekly quota!
-                </p>
+                {isElectron ? (
+                  <>
+                    <button 
+                      onClick={() => {
+                        if (isTracking) {
+                          // @ts-ignore
+                          window.require('electron').ipcRenderer.send('clock-out');
+                          setIsTracking(false);
+                        } else {
+                          // @ts-ignore
+                          window.require('electron').ipcRenderer.send('clock-in', { memberId: loggedInMember.id });
+                          setIsTracking(true);
+                        }
+                      }} 
+                      className="primary-btn" 
+                      style={{ 
+                        background: isTracking ? 'var(--danger)' : 'var(--accent-primary)',
+                        borderColor: isTracking ? 'var(--danger)' : 'var(--accent-primary)',
+                        textDecoration: 'none', display: 'inline-block', marginBottom: '1rem', width: '100%', boxSizing: 'border-box' 
+                      }}
+                    >
+                      {isTracking ? '⏹️ Clock Out' : '▶️ Clock In'}
+                    </button>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                      {isTracking 
+                        ? 'Tracking is active. Your activity is automatically logged.' 
+                        : 'Click "Clock In" to begin tracking your activity.'}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                      Activity tracking is <strong>fully automated</strong>.<br /><br />
+                      Download the Desktop App to use the native tracker.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>

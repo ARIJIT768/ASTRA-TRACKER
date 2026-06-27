@@ -1,9 +1,9 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain, powerMonitor } = require('electron');
 const path = require('path');
-const { spawn } = require('child_process');
+const https = require('https');
 
 let mainWindow;
-let backendProcess;
+let trackingInterval = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -17,10 +17,8 @@ function createWindow() {
     }
   });
 
-  // Determine if we are running from a packaged app
   const isPackaged = app.isPackaged;
   
-  // Load the React app from the dist folder
   const distPath = isPackaged 
     ? path.join(process.resourcesPath, 'dist', 'index.html') 
     : path.join(__dirname, '..', 'frontend', 'dist', 'index.html');
@@ -32,26 +30,50 @@ function createWindow() {
   });
 }
 
-function startBackend() {
-  const isPackaged = app.isPackaged;
-  const serverPath = isPackaged 
-    ? path.join(process.resourcesPath, 'backend', 'server.js')
-    : path.join(__dirname, '..', 'backend', 'server.js');
+function startNativeTracking(memberId) {
+  if (trackingInterval) clearInterval(trackingInterval);
   
-  backendProcess = spawn('node', [serverPath], {
-    windowsHide: true, // Completely hides the cmd window
-    detached: false,
-    stdio: 'ignore'
-  });
+  trackingInterval = setInterval(() => {
+    const idleTime = powerMonitor.getSystemIdleTime();
+    
+    if (idleTime < 60) {
+      const payload = JSON.stringify({
+        member_id: memberId,
+        type: 'auto_ping',
+        active_window: 'ASTRA Desktop App'
+      });
 
-  backendProcess.on('error', (err) => {
-    console.error('Failed to start hidden backend process:', err);
-  });
+      const req = https.request('https://astra-tracker-mu.vercel.app/api/log', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(payload)
+        }
+      }, (res) => {});
+
+      req.on('error', (e) => {
+        console.error('Ping failed:', e);
+      });
+
+      req.write(payload);
+      req.end();
+    }
+  }, 60000);
 }
 
 app.whenReady().then(() => {
-  startBackend();
   createWindow();
+
+  ipcMain.on('clock-in', (event, data) => {
+    startNativeTracking(data.memberId);
+  });
+
+  ipcMain.on('clock-out', () => {
+    if (trackingInterval) {
+      clearInterval(trackingInterval);
+      trackingInterval = null;
+    }
+  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -67,8 +89,5 @@ app.on('window-all-closed', () => {
 });
 
 app.on('quit', () => {
-  // Ensure the backend process is killed when the desktop app is closed
-  if (backendProcess) {
-    backendProcess.kill();
-  }
+  if (trackingInterval) clearInterval(trackingInterval);
 });
