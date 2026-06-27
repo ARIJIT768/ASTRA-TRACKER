@@ -4,7 +4,7 @@ const pool = require('./database');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '4mb' }));
 
 const PORT = process.env.PORT || 5001;
 
@@ -167,6 +167,39 @@ app.post('/api/end-week', async (req, res) => {
 app.post('/api/reminders/:id/read', async (req, res) => {
     try {
         await pool.query("UPDATE reminders SET is_read = 1 WHERE id = $1", [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- Company Chat Endpoints ---
+
+// Get latest chat messages
+app.get('/api/chat', async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            "SELECT id, member_id, member_name, content, file_data, file_type, file_name, timestamp FROM company_chat ORDER BY timestamp ASC LIMIT 200"
+        );
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Post a new chat message
+app.post('/api/chat', async (req, res) => {
+    const { member_id, member_name, content, file_data, file_type, file_name } = req.body;
+    try {
+        // Enforce max payload roughly check (Express JSON already limits, but good to ensure DB doesn't choke)
+        if (file_data && file_data.length > 4000000) {
+            return res.status(400).json({ error: "File too large. Max 3MB allowed for secure chat." });
+        }
+        
+        await pool.query(
+            "INSERT INTO company_chat (member_id, member_name, content, file_data, file_type, file_name) VALUES ($1, $2, $3, $4, $5, $6)",
+            [member_id, member_name, content, file_data, file_type, file_name]
+        );
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });

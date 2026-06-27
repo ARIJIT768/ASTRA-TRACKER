@@ -12,6 +12,7 @@ import {
 import { FaGamepad, FaTerminal, FaWhatsapp, FaSpaceShuttle, FaWindows } from 'react-icons/fa';
 import { VscVscode } from 'react-icons/vsc';
 import { MdWorkOutline } from 'react-icons/md';
+import CompanyChat from './components/CompanyChat';
 
 ChartJS.register(Tooltip, Legend, CategoryScale, LinearScale, Title, PointElement, LineElement, Filler);
 
@@ -196,7 +197,7 @@ function App() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [stats, setStats] = useState<{ daily: number, weekly: number, monthly: number, yearly: number } | null>(null);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'team'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'team' | 'chat'>('dashboard');
   
   const [loggedInMember, setLoggedInMember] = useState<Member | null>(() => {
     const saved = localStorage.getItem('astra_user');
@@ -491,6 +492,7 @@ function App() {
       <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '2rem', padding: '0 1rem' }}>
         <button className={`tab-button ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>My Dashboard</button>
         <button className={`tab-button ${activeTab === 'team' ? 'active' : ''}`} onClick={() => setActiveTab('team')}>Team Activity</button>
+        <button className={`tab-button ${activeTab === 'chat' ? 'active' : ''}`} onClick={() => setActiveTab('chat')}>Company Chat</button>
       </div>
 
       {activeTab === 'dashboard' && (
@@ -691,6 +693,8 @@ function App() {
           </div>
         </div>
       )}
+      
+      {activeTab === 'chat' && <CompanyChat loggedInMember={loggedInMember} />}
     </div>
   );
 }

@@ -43,7 +43,20 @@ async function initDb() {
                 message TEXT NOT NULL,
                 is_read INTEGER DEFAULT 0,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+            );
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS company_chat (
+                id SERIAL PRIMARY KEY,
+                member_id INTEGER REFERENCES members(id),
+                member_name VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                file_data TEXT,
+                file_type VARCHAR(255),
+                file_name VARCHAR(255),
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         `);
 
         // Seed 8 specific members if table is empty
