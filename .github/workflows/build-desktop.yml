@@ -40,4 +40,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ASTRA-Tracker-Windows
-          path: desktop/release/ASTRA Tracker 1.0.0.exe
+          path: "desktop/release/ASTRA Tracker Setup 1.0.0.exe"
