@@ -633,7 +633,8 @@ function App() {
                     const sorted = [...members].sort((a, b) => (b.current_week_hours || 0) - (a.current_week_hours || 0));
                     const top = sorted[0];
                     const bottom = sorted[sorted.length - 1];
-                    const isBottomFailing = bottom && (bottom.current_week_hours || 0) < ((bottom.weekly_target_hours || 0) + (bottom.carryover_deficit || 0)) * 0.5;
+                    const isWeekStarted = top && (top.current_week_hours || 0) > 0;
+                    const isBottomFailing = isWeekStarted && bottom && (bottom.current_week_hours || 0) < ((bottom.weekly_target_hours || 0) + (bottom.carryover_deficit || 0)) * 0.5;
                     
                     return (
                       <>
