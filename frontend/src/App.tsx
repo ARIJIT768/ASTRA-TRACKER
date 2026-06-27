@@ -453,8 +453,8 @@ function App() {
             </div>
             {loginId && (
               <div className="form-group">
-                <label style={{ color: isSettingPin ? 'var(--accent-primary)' : 'inherit' }}>{isSettingPin ? 'Setup Your New PIN' : 'Enter Your PIN'}</label>
-                <input type="password" value={pin} onChange={(e) => setPin(e.target.value)} placeholder={isSettingPin ? 'Create a 4+ digit PIN' : 'Enter PIN'} required />
+                <label style={{ color: isSettingPin ? 'var(--accent-primary)' : 'inherit' }}>{isSettingPin ? 'Setup Your New 6-Digit PIN' : 'Enter Your 6-Digit PIN'}</label>
+                <input type="password" value={pin} onChange={(e) => setPin(e.target.value)} placeholder={isSettingPin ? 'Create a 6-digit PIN' : 'Enter 6-digit PIN'} required maxLength={6} minLength={6} />
                 {isSettingPin && <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '0.5rem' }}>You will use this PIN for all future logins.</small>}
               </div>
             )}

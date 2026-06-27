@@ -56,7 +56,7 @@ def setup_member_id(config_path, config):
             selected_member = next((m for m in members if m['id'] == choice), None)
             
             if selected_member:
-                pin = input("Enter your 4-digit PIN: ")
+                pin = input("Enter your 6-digit PIN: ")
                 
                 # Authenticate with server
                 auth_payload = json.dumps({"member_id": choice, "pin": pin}).encode('utf-8')

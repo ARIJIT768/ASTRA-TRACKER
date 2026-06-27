@@ -38,7 +38,7 @@ app.post('/api/login', async (req, res) => {
 // Set PIN for the first time
 app.post('/api/set-pin', async (req, res) => {
     const { member_id, pin } = req.body;
-    if (!pin || pin.length < 4) return res.status(400).json({ error: "PIN must be at least 4 characters" });
+    if (!pin || pin.length !== 6) return res.status(400).json({ error: "PIN must be exactly 6 digits" });
 
     try {
         const { rows } = await pool.query("SELECT pin FROM members WHERE id = $1", [member_id]);

@@ -11,7 +11,6 @@ type ChatMessage = {
   file_type: string | null;
   file_name: string | null;
   timestamp: string;
-  // Decrypted values (local only)
   decryptedContent?: string;
   decryptedFileData?: string | null;
   decryptionFailed?: boolean;
@@ -128,6 +127,7 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
     e.preventDefault();
     if (!password) return;
     try {
+      // E2EE using their 6-digit PIN as the shared key
       const key = await deriveKey(password);
       setCryptoKey(key);
       setIsUnlocked(true);
@@ -149,7 +149,7 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
       let fileName = null;
       
       if (attachment) {
-        if (attachment.size > 3000000) { // 3MB limit for DB
+        if (attachment.size > 3000000) { 
            alert("File is too large! Max 3MB allowed for DB limits.");
            setIsSending(false);
            return;
@@ -186,22 +186,24 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
 
   if (!isUnlocked) {
     return (
-      <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr', maxWidth: '600px', margin: '0 auto' }}>
+      <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr', maxWidth: '400px', margin: '4rem auto' }}>
         <div className="panel glass animate-stagger-1" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
-          <h2>🔒 Secure Company Chat</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-            This chat is <strong>End-to-End Encrypted (E2EE)</strong>. Messages and files are encrypted locally in your browser before hitting the database. Vercel and Supabase cannot read them.
+          <h2 style={{ marginBottom: '0.5rem' }}>🔒 E2EE Chat Lock</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '0.9rem' }}>
+            Enter your <strong>6-Digit PIN</strong> to decrypt the company chat.
           </p>
           <form onSubmit={handleUnlock}>
             <input 
               type="password" 
-              placeholder="Enter shared company secret key..." 
+              placeholder="Enter 6-digit PIN" 
               value={password}
               onChange={e => setPassword(e.target.value)}
-              style={{ width: '100%', marginBottom: '1rem', textAlign: 'center', fontSize: '1.2rem', padding: '1rem' }}
+              style={{ width: '100%', marginBottom: '1.5rem', textAlign: 'center', fontSize: '1.2rem', padding: '1rem', letterSpacing: '4px' }}
               required
+              maxLength={6}
+              minLength={6}
             />
-            <button type="submit" className="primary-btn" style={{ width: '100%' }}>Unlock Secure Chat</button>
+            <button type="submit" className="primary-btn" style={{ width: '100%', padding: '1rem' }}>Decrypt Chat</button>
           </form>
         </div>
       </div>
@@ -209,101 +211,113 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
   }
 
   return (
-    <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr', height: 'calc(100vh - 200px)' }}>
-      <div className="panel glass" style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '0', overflow: 'hidden' }}>
-        
-        {/* Header */}
-        <div style={{ padding: '1.2rem 1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ color: 'var(--success)' }}>●</span> Secure Company Chat
-          </h3>
-          <button onClick={() => { setIsUnlocked(false); setCryptoKey(null); }} className="primary-btn" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', background: 'var(--danger)', borderColor: 'var(--danger)' }}>
-             Lock Chat
-          </button>
+    <div style={{ height: 'calc(100vh - 180px)', maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: '#0b141a', fontFamily: '"Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif' }}>
+      
+      {/* WhatsApp Style Header */}
+      <div style={{ padding: '10px 16px', background: '#202c33', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#00a884', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>🏢</div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+             <span style={{ color: '#e9edef', fontSize: '16px', fontWeight: 500 }}>ASTRA Company Chat</span>
+             <span style={{ color: '#8696a0', fontSize: '13px' }}>End-to-end encrypted</span>
+          </div>
         </div>
+        <button onClick={() => { setIsUnlocked(false); setCryptoKey(null); setPassword(''); }} style={{ background: 'transparent', border: 'none', color: '#8696a0', cursor: 'pointer', fontSize: '14px', padding: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+           🔒 Lock
+        </button>
+      </div>
 
-        {/* Message Feed */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(0,0,0,0.3)' }}>
-          {messages.map((msg, idx) => {
-            const isMe = msg.member_id === loggedInMember.id;
-            return (
-              <div key={idx} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '75%', minWidth: '200px' }}>
-                {!isMe && <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.2rem', marginLeft: '0.5rem' }}>{msg.member_name}</div>}
-                <div style={{ 
-                  background: isMe ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)', 
-                  padding: '1rem', 
-                  borderRadius: '12px',
-                  borderBottomRightRadius: isMe ? '2px' : '12px',
-                  borderBottomLeftRadius: !isMe ? '2px' : '12px',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-                }}>
-                  {msg.decryptionFailed ? (
-                     <span style={{ color: 'var(--danger)', fontStyle: 'italic' }}>[Encrypted Message]</span>
-                  ) : (
-                     <span style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{msg.decryptedContent}</span>
-                  )}
-                  
-                  {msg.decryptedFileData && (
-                    <div style={{ marginTop: '0.8rem', paddingTop: '0.8rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                      {msg.file_type?.startsWith('image/') && (
-                        <img src={msg.decryptedFileData} alt="attachment" style={{ maxWidth: '100%', borderRadius: '8px' }} />
-                      )}
-                      {msg.file_type?.startsWith('video/') && (
-                        <video src={msg.decryptedFileData} controls style={{ maxWidth: '100%', borderRadius: '8px' }} />
-                      )}
-                      {!msg.file_type?.startsWith('image/') && !msg.file_type?.startsWith('video/') && (
-                        <a href={msg.decryptedFileData} download={msg.file_name || 'document'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: isMe ? '#fff' : 'var(--accent-primary)', textDecoration: 'none', background: 'rgba(0,0,0,0.2)', padding: '0.8rem', borderRadius: '6px' }}>
-                          📄 {msg.file_name}
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </div>
-                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginTop: '0.3rem', textAlign: isMe ? 'right' : 'left' }}>
+      {/* WhatsApp Style Feed */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 5%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ background: '#182229', color: '#ffeecd', fontSize: '12.5px', padding: '8px 12px', borderRadius: '8px', alignSelf: 'center', textAlign: 'center', marginBottom: '15px', maxWidth: '90%' }}>
+          🔒 Messages and calls are end-to-end encrypted. No one outside of this chat, not even ASTRA, can read or listen to them.
+        </div>
+        
+        {messages.map((msg, idx) => {
+          const isMe = msg.member_id === loggedInMember.id;
+          const showName = !isMe && (idx === 0 || messages[idx-1].member_id !== msg.member_id);
+          
+          return (
+            <div key={idx} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '65%', minWidth: '120px', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ 
+                background: isMe ? '#005c4b' : '#202c33', 
+                color: '#e9edef',
+                padding: '6px 9px 8px 9px', 
+                borderRadius: '7.5px',
+                borderTopRightRadius: isMe ? '0' : '7.5px',
+                borderTopLeftRadius: !isMe ? '0' : '7.5px',
+                boxShadow: '0 1px 0.5px rgba(11,20,26,.13)',
+                position: 'relative'
+              }}>
+                {showName && <div style={{ fontSize: '12.5px', color: '#53bdeb', fontWeight: 500, marginBottom: '2px' }}>{msg.member_name}</div>}
+                
+                {msg.decryptedFileData && (
+                  <div style={{ marginBottom: msg.decryptedContent ? '5px' : '0' }}>
+                    {msg.file_type?.startsWith('image/') && (
+                      <img src={msg.decryptedFileData} alt="attachment" style={{ width: '100%', borderRadius: '6px', maxHeight: '300px', objectFit: 'cover' }} />
+                    )}
+                    {msg.file_type?.startsWith('video/') && (
+                      <video src={msg.decryptedFileData} controls style={{ width: '100%', borderRadius: '6px', maxHeight: '300px' }} />
+                    )}
+                    {!msg.file_type?.startsWith('image/') && !msg.file_type?.startsWith('video/') && (
+                      <a href={msg.decryptedFileData} download={msg.file_name || 'document'} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#e9edef', textDecoration: 'none', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '6px', fontSize: '14px' }}>
+                        <div style={{ background: '#00a884', padding: '8px', borderRadius: '50%' }}>📄</div> {msg.file_name}
+                      </a>
+                    )}
+                  </div>
+                )}
+                
+                {msg.decryptionFailed ? (
+                   <span style={{ color: '#f15c6d', fontStyle: 'italic', fontSize: '14.2px' }}>[Encrypted Message]</span>
+                ) : (
+                   <span style={{ fontSize: '14.2px', lineHeight: '19px', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{msg.decryptedContent}</span>
+                )}
+                
+                <div style={{ float: 'right', fontSize: '11px', color: 'rgba(255,255,255,0.6)', marginLeft: '10px', marginTop: '4px', height: '15px' }}>
                   {new Date(msg.timestamp).toLocaleString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
-            );
-          })}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Area */}
-        <div style={{ padding: '1.2rem', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}>
-          {attachment && (
-            <div style={{ marginBottom: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.1)', padding: '0.4rem 1rem', borderRadius: '20px', fontSize: '0.85rem' }}>
-              📎 {attachment.name} ({(attachment.size / 1024 / 1024).toFixed(2)} MB)
-              <button onClick={() => { setAttachment(null); if(fileInputRef.current) fileInputRef.current.value = ''; }} style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', marginLeft: '0.5rem' }}>✕</button>
             </div>
-          )}
-          <form onSubmit={handleSend} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <button 
-              type="button" 
-              onClick={() => fileInputRef.current?.click()}
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: '50%', width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '1.2rem' }}
-            >
-              📎
-            </button>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              style={{ display: 'none' }} 
-              onChange={e => setAttachment(e.target.files?.[0] || null)}
-            />
-            <input 
-              type="text" 
-              value={draft}
-              onChange={e => setDraft(e.target.value)}
-              placeholder="Type an encrypted message..."
-              style={{ flex: 1, borderRadius: '24px', padding: '0.8rem 1.5rem', background: 'rgba(255,255,255,0.05)' }}
-            />
-            <button type="submit" disabled={isSending} className="primary-btn" style={{ borderRadius: '24px', padding: '0.8rem 1.5rem' }}>
-              {isSending ? 'Encrypting...' : 'Send'}
-            </button>
-          </form>
-        </div>
-
+          );
+        })}
+        <div ref={messagesEndRef} />
       </div>
+
+      {/* WhatsApp Style Input Area */}
+      <div style={{ background: '#202c33', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {attachment && (
+          <div style={{ position: 'absolute', bottom: '70px', left: '20px', background: '#2a3942', padding: '10px 15px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.2)', color: '#e9edef' }}>
+            📄 {attachment.name} 
+            <button onClick={() => { setAttachment(null); if(fileInputRef.current) fileInputRef.current.value = ''; }} style={{ background: 'transparent', border: 'none', color: '#f15c6d', cursor: 'pointer', fontSize: '16px' }}>✕</button>
+          </div>
+        )}
+        <button 
+          type="button" 
+          onClick={() => fileInputRef.current?.click()}
+          style={{ background: 'transparent', border: 'none', color: '#8696a0', cursor: 'pointer', fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5px' }}
+        >
+          📎
+        </button>
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          style={{ display: 'none' }} 
+          onChange={e => setAttachment(e.target.files?.[0] || null)}
+        />
+        <form onSubmit={handleSend} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <input 
+            type="text" 
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            placeholder="Type a message"
+            style={{ flex: 1, background: '#2a3942', color: '#d1d7db', border: 'none', padding: '9px 12px', borderRadius: '8px', fontSize: '15px', outline: 'none' }}
+          />
+          <button type="submit" disabled={isSending} style={{ background: '#00a884', color: '#111b21', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px' }}>
+            {isSending ? '⋯' : '➤'}
+          </button>
+        </form>
+      </div>
+
     </div>
   );
 }
