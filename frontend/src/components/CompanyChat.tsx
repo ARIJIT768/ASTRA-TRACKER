@@ -252,7 +252,7 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
       </div>
 
       {/* Feed */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 5%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary)', fontSize: '12.5px', padding: '8px 12px', borderRadius: '8px', alignSelf: 'center', textAlign: 'center', marginBottom: '15px', maxWidth: '90%' }}>
           🔒 Messages and calls are end-to-end encrypted. No one outside of this chat, not even ASTRA, can read or listen to them.
         </div>

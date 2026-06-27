@@ -1,19 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
 
 :root {
-  --bg-color: #050511;
-  --bg-gradient: linear-gradient(135deg, #050511 0%, #0a0b22 50%, #07071a 100%);
-  --surface-color: rgba(18, 19, 43, 0.4);
-  --surface-color-hover: rgba(30, 32, 70, 0.6);
-  --text-primary: #ffffff;
-  --text-secondary: #94a3b8;
-  --accent-primary: #00f0ff;
-  --accent-secondary: #7000ff;
-  --accent-glow: rgba(0, 240, 255, 0.3);
-  --danger: #ff0055;
-  --success: #00ff88;
+  --bg-color: #0e0e11;
+  --bg-gradient: linear-gradient(180deg, #111116 0%, #0a0a0c 100%);
+  --surface-color: rgba(28, 28, 32, 0.6);
+  --surface-color-hover: rgba(38, 38, 44, 0.8);
+  --text-primary: #ededf0;
+  --text-secondary: #94949e;
+  --accent-primary: #3b82f6;
+  --accent-secondary: #6366f1;
+  --accent-glow: rgba(59, 130, 246, 0.15);
+  --danger: #ef4444;
+  --success: #10b981;
   --border-color: rgba(255, 255, 255, 0.08);
-  --border-glow: rgba(255, 255, 255, 0.15);
+  --border-glow: rgba(255, 255, 255, 0.05);
 }
 
 * {
@@ -35,7 +35,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Dynamic background elements */
+/* Dynamic background elements - Toned down */
 body::before {
   content: '';
   position: fixed;
@@ -44,10 +44,10 @@ body::before {
   width: 600px;
   height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(112, 0, 255, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
   pointer-events: none;
   z-index: -1;
-  animation: float 10s ease-in-out infinite alternate;
+  animation: float 15s ease-in-out infinite alternate;
 }
 
 body::after {
@@ -58,10 +58,10 @@ body::after {
   width: 500px;
   height: 500px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(0, 240, 255, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
   pointer-events: none;
   z-index: -1;
-  animation: float 8s ease-in-out infinite alternate-reverse;
+  animation: float 12s ease-in-out infinite alternate-reverse;
 }
 
 @keyframes gradientBG {
@@ -82,19 +82,17 @@ h1, h2, h3, h4, .brand-font {
 /* Premium Glassmorphism */
 .glass {
   background: var(--surface-color);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-color);
-  border-top: 1px solid var(--border-glow);
-  border-left: 1px solid var(--border-glow);
-  border-radius: 20px;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.2);
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .glass:hover {
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4), 0 0 20px 0 rgba(112, 0, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 30px 0 rgba(0, 0, 0, 0.3), 0 0 15px 0 var(--accent-glow);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 /* Layout */
@@ -164,8 +162,8 @@ h1::after {
 }
 
 .stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 /* Tab Navigation */

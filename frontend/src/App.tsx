@@ -531,14 +531,14 @@ function App() {
                   </div>
                 </div>
 
-                <div className="stat-card glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '16px', borderLeft: '4px solid #ff00aa', transition: 'transform 0.3s ease' }}>
+                <div className="stat-card glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '16px', borderLeft: '4px solid var(--accent-secondary)', transition: 'transform 0.3s ease' }}>
                   <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>This Month</span>
                   <div style={{ fontSize: '2.8rem', fontWeight: '800', fontFamily: 'Outfit', color: 'var(--text-primary)' }}>
                     {stats?.monthly?.toFixed(2) || '0.00'}<span style={{ fontSize: '1.4rem', color: 'var(--text-secondary)' }}>h</span>
                   </div>
                 </div>
 
-                <div className="stat-card glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '16px', borderLeft: '4px solid #ffaa00', transition: 'transform 0.3s ease' }}>
+                <div className="stat-card glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderRadius: '16px', borderLeft: '4px solid var(--text-secondary)', transition: 'transform 0.3s ease' }}>
                   <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>This Year</span>
                   <div style={{ fontSize: '2.8rem', fontWeight: '800', fontFamily: 'Outfit', color: 'var(--text-primary)' }}>
                     {stats?.yearly?.toFixed(2) || '0.00'}<span style={{ fontSize: '1.4rem', color: 'var(--text-secondary)' }}>h</span>
@@ -632,7 +632,7 @@ function App() {
                 Summary of total weekly hours and quota progress for all members.
               </p>
 
-              <div className="panel glass animate-stagger-2" style={{ marginBottom: '2rem', borderLeft: '4px solid #00f0ff', background: 'rgba(0,0,0,0.2)' }}>
+              <div className="panel glass animate-stagger-2" style={{ marginBottom: '2rem', borderLeft: '4px solid var(--accent-primary)', background: 'rgba(0,0,0,0.2)' }}>
                 <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.8rem', color: '#fff' }}>🤖 ASTRA Insights</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                   {(() => {
@@ -644,18 +644,24 @@ function App() {
                     
                     return (
                       <>
-                        {top && (top.current_week_hours || 0) > 0 && (
-                          <div style={{ padding: '1rem', background: 'rgba(0, 255, 136, 0.05)', borderRadius: '8px', border: '1px solid rgba(0, 255, 136, 0.2)' }}>
-                            <strong style={{ color: 'var(--success)' }}>🏆 Top Performer:</strong> {top.name} is leading the team with {(top.current_week_hours || 0).toFixed(2)} hours logged this week! Outstanding dedication.
+                        {!isWeekStarted ? (
+                          <div style={{ padding: '1rem', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                            <strong style={{ color: 'var(--accent-primary)' }}>⏳ Waiting for Activity:</strong> The week has just started. ASTRA is waiting for members to log their activity before generating insights.
                           </div>
+                        ) : (
+                          <>
+                            <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                              <strong style={{ color: 'var(--success)' }}>🏆 Top Performer:</strong> {top.name} is leading the team with {(top.current_week_hours || 0).toFixed(2)} hours logged this week!
+                            </div>
+                            {isBottomFailing && (
+                              <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                                <strong style={{ color: 'var(--danger)' }}>⚠️ Needs Focus:</strong> {bottom.name} is currently significantly behind their weekly quota. 
+                              </div>
+                            )}
+                          </>
                         )}
-                        {isBottomFailing && (
-                          <div style={{ padding: '1rem', background: 'rgba(255, 0, 85, 0.05)', borderRadius: '8px', border: '1px solid rgba(255, 0, 85, 0.2)' }}>
-                            <strong style={{ color: 'var(--danger)' }}>⚠️ Falling Behind:</strong> {bottom.name} is currently significantly behind their weekly quota. ASTRA recommends prioritizing focused work sessions.
-                          </div>
-                        )}
-                        <div style={{ padding: '1rem', background: 'rgba(0, 240, 255, 0.05)', borderRadius: '8px', border: '1px solid rgba(0, 240, 255, 0.2)' }}>
-                          <strong style={{ color: 'var(--accent-primary)' }}>💡 Suggestion:</strong> Break down larger tasks into 2-hour deep work blocks to improve tracking consistency across the team.
+                        <div style={{ padding: '1rem', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                          <strong style={{ color: 'var(--accent-secondary)' }}>💡 Suggestion:</strong> Break down larger tasks into 2-hour deep work blocks to improve tracking consistency across the team.
                         </div>
                       </>
                     );
