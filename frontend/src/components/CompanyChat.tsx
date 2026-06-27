@@ -127,12 +127,25 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
     e.preventDefault();
     if (!password) return;
     try {
-      // E2EE using their 6-digit PIN as the shared key
-      const key = await deriveKey(password);
+      // 1. Verify their personal PIN with the backend
+      const res = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: loggedInMember.id, pin: password })
+      });
+      const data = await res.json();
+      
+      if (!res.ok || !data.success) {
+        alert("Incorrect PIN. Chat remains locked.");
+        return;
+      }
+      
+      // 2. Derive the actual E2EE key using a Shared Company Secret so everyone can read the chat
+      const key = await deriveKey("ASTRA_SHARED_COMPANY_CHAT_KEY_2026");
       setCryptoKey(key);
       setIsUnlocked(true);
     } catch (e) {
-      alert("Failed to setup encryption keys.");
+      alert("Failed to setup encryption keys or verify PIN.");
     }
   };
 
