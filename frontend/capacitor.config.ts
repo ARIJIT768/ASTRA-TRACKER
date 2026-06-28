@@ -3,11 +3,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.astra.tracker',
   appName: 'ASTRA',
-  webDir: 'dist',
-  server: {
-    url: 'https://astra-tracker-mu.vercel.app',
-    cleartext: true
-  }
+  webDir: 'dist'
 };
 
 export default config;
