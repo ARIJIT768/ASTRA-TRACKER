@@ -338,6 +338,19 @@ select option {
   padding: 12px;
 }
 
+.logs-list {
+  max-height: 250px;
+}
+
+.chat-container {
+  height: calc(100vh - 180px);
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ======================= ANIMATIONS ======================= */
 /* ======================= BUTTONS ======================= */
 button.primary-btn {
   background: linear-gradient(135deg, var(--neon-violet) 0%, #4c1d95 100%);

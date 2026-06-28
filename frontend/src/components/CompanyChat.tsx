@@ -235,7 +235,7 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
   }
 
   return (
-    <div className="chat-container">
+    <div className="chat-container glass">
       
       {/* Header */}
       <div style={{ padding: '16px 20px', background: 'var(--surface-elevated)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
