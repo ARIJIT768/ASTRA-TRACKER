@@ -822,31 +822,37 @@ function App() {
                   {(() => {
                     const sorted = [...members].sort((a, b) => (b.current_week_hours || 0) - (a.current_week_hours || 0));
                     const top = sorted[0];
-                    const bottom = sorted[sorted.length - 1];
-                    const isWeekStarted = top && (top.current_week_hours || 0) > 0;
-                    const isBottomFailing = isWeekStarted && bottom && (bottom.current_week_hours || 0) < (bottom.weekly_target_hours || 0) * 0.5;
+                    const totalTeamHours = members.reduce((acc, m) => acc + (m.current_week_hours || 0), 0);
+                    const isWeekStarted = totalTeamHours > 0;
+                    const failingMembers = members.filter(m => (m.current_week_hours || 0) < (m.weekly_target_hours || 0) * 0.5);
                     
                     return (
                       <>
                         {!isWeekStarted ? (
-                          <div style={{ padding: '1rem', background: 'rgba(0, 240, 255, 0.03)', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.1)' }}>
-                            <strong style={{ color: 'var(--neon-cyan)' }}>⏳ Waiting for Activity:</strong> The week has just started. ASTRA is waiting for members to log their activity before generating insights.
+                          <div style={{ padding: '1.2rem', background: 'rgba(0, 240, 255, 0.05)', borderRadius: '12px', border: '1px solid rgba(0, 240, 255, 0.15)' }}>
+                            <strong style={{ color: 'var(--neon-cyan)', display: 'block', marginBottom: '0.3rem' }}>⏳ Awaiting Team Activity</strong> 
+                            The week has just started and the team is at 0 hours. Start your trackers to generate AI insights!
                           </div>
                         ) : (
                           <>
-                            <div style={{ padding: '1rem', background: 'rgba(0, 255, 136, 0.03)', borderRadius: '10px', border: '1px solid rgba(0, 255, 136, 0.1)' }}>
-                              <strong style={{ color: 'var(--neon-green)' }}>🏆 Top Performer:</strong> {top.name} is leading the team with {(top.current_week_hours || 0).toFixed(2)} hours logged this week!
+                            <div style={{ padding: '1.2rem', background: 'rgba(0, 255, 136, 0.05)', borderRadius: '12px', border: '1px solid rgba(0, 255, 136, 0.15)' }}>
+                              <strong style={{ color: 'var(--neon-green)', display: 'block', marginBottom: '0.3rem' }}>🏆 Top Performer</strong> 
+                              {top.name} is leading the team with {(top.current_week_hours || 0).toFixed(2)} hours logged this week! Outstanding consistency.
                             </div>
-                            {isBottomFailing && (
-                              <div style={{ padding: '1rem', background: 'rgba(255, 45, 85, 0.03)', borderRadius: '10px', border: '1px solid rgba(255, 45, 85, 0.1)' }}>
-                                <strong style={{ color: 'var(--danger)' }}>⚠️ Needs Focus:</strong> {bottom.name} is currently significantly behind their weekly quota. 
+                            
+                            {failingMembers.length > 0 && (
+                              <div style={{ padding: '1.2rem', background: 'rgba(255, 45, 85, 0.05)', borderRadius: '12px', border: '1px solid rgba(255, 45, 85, 0.15)' }}>
+                                <strong style={{ color: 'var(--danger)', display: 'block', marginBottom: '0.3rem' }}>⚠️ Team Warning</strong> 
+                                {failingMembers.length} member(s) are currently significantly behind their weekly quota. Consider a quick standup to unblock tasks.
                               </div>
                             )}
+                            
+                            <div style={{ padding: '1.2rem', background: 'rgba(124, 58, 237, 0.05)', borderRadius: '12px', border: '1px solid rgba(124, 58, 237, 0.15)' }}>
+                              <strong style={{ color: 'var(--neon-violet)', display: 'block', marginBottom: '0.3rem' }}>💡 Productivity Tip</strong> 
+                              The team has logged {totalTeamHours.toFixed(2)} total hours this week. Try grouping deep work into 90-minute focused blocks for maximum flow state.
+                            </div>
                           </>
                         )}
-                        <div style={{ padding: '1rem', background: 'rgba(124, 58, 237, 0.03)', borderRadius: '10px', border: '1px solid rgba(124, 58, 237, 0.1)' }}>
-                          <strong style={{ color: 'var(--neon-violet)' }}>💡 Suggestion:</strong> Break down larger tasks into 2-hour deep work blocks to improve tracking consistency across the team.
-                        </div>
                       </>
                     );
                   })()}

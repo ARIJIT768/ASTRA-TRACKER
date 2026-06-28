@@ -238,23 +238,23 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
     <div className="chat-container">
       
       {/* Header */}
-      <div style={{ padding: '12px 16px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
+      <div style={{ padding: '16px 20px', background: 'var(--surface-elevated)', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>🏢</div>
+          <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(0, 240, 255, 0.1)', border: '1px solid rgba(0, 240, 255, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', boxShadow: '0 0 15px rgba(0,240,255,0.05)' }}>🏢</div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-             <span style={{ color: '#e9edef', fontSize: '16px', fontWeight: 500 }}>ASTRA Company Chat</span>
-             <span style={{ color: '#8696a0', fontSize: '13px' }}>End-to-end encrypted</span>
+             <span style={{ color: 'var(--neon-cyan)', fontSize: '17px', fontWeight: 600, fontFamily: 'Outfit', letterSpacing: '0.3px' }}>ASTRA Company Chat</span>
+             <span style={{ color: 'var(--text-secondary)', fontSize: '12.5px', display: 'flex', alignItems: 'center', gap: '4px' }}>🔒 End-to-end encrypted</span>
           </div>
         </div>
-        <button onClick={() => { setIsUnlocked(false); setCryptoKey(null); setPassword(''); sessionStorage.removeItem('astra_chat_unlocked'); }} style={{ background: 'transparent', border: 'none', color: '#8696a0', cursor: 'pointer', fontSize: '14px', padding: '8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-           🔒 Lock
+        <button onClick={() => { setIsUnlocked(false); setCryptoKey(null); setPassword(''); sessionStorage.removeItem('astra_chat_unlocked'); }} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '13px', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '6px', transition: 'all 0.2s ease' }} onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
+           Lock Chat
         </button>
       </div>
 
       {/* Feed */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary)', fontSize: '12.5px', padding: '8px 12px', borderRadius: '8px', alignSelf: 'center', textAlign: 'center', marginBottom: '15px', maxWidth: '90%' }}>
-          🔒 Messages and calls are end-to-end encrypted. No one outside of this chat, not even ASTRA, can read or listen to them.
+      <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(0,0,0,0.2)' }}>
+        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-secondary)', fontSize: '12px', padding: '10px 16px', borderRadius: '12px', alignSelf: 'center', textAlign: 'center', marginBottom: '20px', maxWidth: '85%', lineHeight: '1.5' }}>
+          🔒 Messages and files are <strong>end-to-end encrypted</strong>. No one outside of this chat, not even the database or ASTRA servers, can read them.
         </div>
         
         {messages.map((msg, idx) => {
@@ -264,16 +264,17 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
           return (
             <div key={idx} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '70%', minWidth: '120px', display: 'flex', flexDirection: 'column' }}>
               <div style={{ 
-                background: isMe ? '#3b82f6' : 'rgba(255,255,255,0.08)', 
-                color: '#fff',
-                padding: '8px 12px', 
-                borderRadius: '12px',
-                borderBottomRightRadius: isMe ? '2px' : '12px',
-                borderBottomLeftRadius: !isMe ? '2px' : '12px',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                background: isMe ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.8), rgba(76, 29, 149, 0.9))' : 'rgba(255,255,255,0.05)', 
+                color: 'var(--text-primary)',
+                padding: '10px 14px', 
+                borderRadius: '16px',
+                borderBottomRightRadius: isMe ? '4px' : '16px',
+                borderBottomLeftRadius: !isMe ? '4px' : '16px',
+                border: isMe ? '1px solid rgba(124, 58, 237, 0.4)' : '1px solid rgba(255,255,255,0.08)',
+                boxShadow: isMe ? '0 4px 20px rgba(124, 58, 237, 0.2)' : '0 4px 15px rgba(0,0,0,0.2)',
                 position: 'relative'
               }}>
-                {showName && <div style={{ fontSize: '12px', color: isMe ? 'rgba(255,255,255,0.85)' : '#60a5fa', fontWeight: 600, marginBottom: '4px' }}>{msg.member_name}</div>}
+                {showName && <div style={{ fontSize: '11.5px', color: isMe ? 'rgba(255,255,255,0.7)' : 'var(--neon-cyan)', fontWeight: 600, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{msg.member_name}</div>}
                 
                 {msg.decryptedFileData && (
                   <div style={{ marginBottom: msg.decryptedContent ? '5px' : '0' }}>
@@ -284,8 +285,8 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
                       <video src={msg.decryptedFileData} controls style={{ width: '100%', borderRadius: '6px', maxHeight: '300px' }} />
                     )}
                     {!msg.file_type?.startsWith('image/') && !msg.file_type?.startsWith('video/') && (
-                      <a href={msg.decryptedFileData} download={msg.file_name || 'document'} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fff', textDecoration: 'none', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '6px', fontSize: '14px' }}>
-                        <div style={{ background: '#3b82f6', padding: '8px', borderRadius: '50%' }}>📄</div> {msg.file_name}
+                      <a href={msg.decryptedFileData} download={msg.file_name || 'document'} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)', textDecoration: 'none', background: 'rgba(0,0,0,0.25)', padding: '10px 14px', borderRadius: '10px', fontSize: '13.5px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ background: isMe ? 'rgba(255,255,255,0.15)' : 'rgba(0,240,255,0.1)', padding: '8px', borderRadius: '8px', color: isMe ? '#fff' : 'var(--neon-cyan)' }}>📄</div> {msg.file_name}
                       </a>
                     )}
                   </div>
@@ -308,17 +309,19 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
       </div>
 
       {/* Input Area */}
-      <div style={{ background: 'rgba(0,0,0,0.3)', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ background: 'var(--surface-elevated)', borderTop: '1px solid var(--border-color)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         {attachment && (
-          <div style={{ position: 'absolute', bottom: '70px', left: '20px', background: '#2a3942', padding: '10px 15px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.2)', color: '#e9edef' }}>
+          <div style={{ position: 'absolute', bottom: '85px', left: '20px', background: 'var(--surface-color)', backdropFilter: 'blur(10px)', border: '1px solid var(--neon-cyan)', padding: '10px 15px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 20px rgba(0,240,255,0.15)', color: 'var(--text-primary)' }}>
             📄 {attachment.name} 
-            <button onClick={() => { setAttachment(null); if(fileInputRef.current) fileInputRef.current.value = ''; }} style={{ background: 'transparent', border: 'none', color: '#f15c6d', cursor: 'pointer', fontSize: '16px' }}>✕</button>
+            <button onClick={() => { setAttachment(null); if(fileInputRef.current) fileInputRef.current.value = ''; }} style={{ background: 'rgba(255,45,85,0.1)', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '12px', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
           </div>
         )}
         <button 
           type="button" 
           onClick={() => fileInputRef.current?.click()}
-          style={{ background: 'transparent', border: 'none', color: '#8696a0', cursor: 'pointer', fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5px' }}
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '20px', width: '45px', height: '45px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease' }}
+          onMouseOver={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = 'var(--text-primary)'; }} 
+          onMouseOut={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
         >
           📎
         </button>
@@ -333,11 +336,13 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
             type="text" 
             value={draft}
             onChange={e => setDraft(e.target.value)}
-            placeholder="Type a message..."
-            style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: '24px', fontSize: '15px', outline: 'none' }}
+            placeholder="Type an encrypted message..."
+            style={{ flex: 1, background: 'rgba(0,0,0,0.5)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.1)', padding: '14px 20px', borderRadius: '24px', fontSize: '15px', outline: 'none', transition: 'all 0.3s ease' }}
+            onFocus={e => { e.currentTarget.style.borderColor = 'var(--neon-violet)'; e.currentTarget.style.boxShadow = '0 0 15px rgba(124, 58, 237, 0.2)'; }}
+            onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.boxShadow = 'none'; }}
           />
-          <button type="submit" disabled={isSending} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '50%', width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px' }}>
-            {isSending ? '⋯' : '➤'}
+          <button type="submit" disabled={isSending} style={{ background: 'linear-gradient(135deg, var(--neon-violet), #4c1d95)', color: '#fff', border: '1px solid rgba(124,58,237,0.5)', borderRadius: '50%', width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px', boxShadow: '0 4px 15px rgba(124,58,237,0.3)' }}>
+            {isSending ? <div className="spinner" style={{ width: '20px', height: '20px', borderWidth: '2px' }} /> : '➤'}
           </button>
         </form>
       </div>
