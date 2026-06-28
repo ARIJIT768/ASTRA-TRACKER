@@ -267,7 +267,20 @@ function App() {
   const [isTracking, setIsTracking] = useState(false);
   const [trackingStartTime, setTrackingStartTime] = useState<number | null>(null);
   const [elapsedDisplay, setElapsedDisplay] = useState('00:00:00');
+  const [trackingError, setTrackingError] = useState(false);
   const webTrackingRef = useRef<any>(null);
+
+  // IPC Listeners for Desktop App Network Status
+  useEffect(() => {
+    if (isElectron) {
+      try {
+        // @ts-ignore
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.on('tracking-ping-success', () => setTrackingError(false));
+        ipcRenderer.on('tracking-ping-failed', () => setTrackingError(true));
+      } catch (e) { console.error('IPC listener setup failed', e); }
+    }
+  }, []);
 
   useEffect(() => {
     sessionStorage.setItem('astra_active_tab', activeTab);
@@ -429,6 +442,7 @@ function App() {
     setIsTracking(false);
     setTrackingStartTime(null);
     setElapsedDisplay('00:00:00');
+    setTrackingError(false);
     
     if (isElectron) {
       try {
@@ -766,20 +780,24 @@ function App() {
               <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                 {isTracking ? (
                   <>
-                    <div className="tracking-status" style={{ marginBottom: '1rem', justifyContent: 'center', flexDirection: 'column', gap: '0.3rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span className="tracking-dot"></span>
-                        <span className="status-text">Tracking Active</span>
-                      </div>
-                      <span className="elapsed-time">{elapsedDisplay}</span>
-                    </div>
                     <button 
                       onClick={handleClockOut}
                       className="primary-btn clock-out-btn" 
-                      style={{ width: '100%' }}
+                      style={{ 
+                        background: 'rgba(255,45,85,0.1)', 
+                        border: '1px solid var(--danger)', 
+                        color: 'var(--danger)', 
+                        boxShadow: '0 0 15px rgba(255,45,85,0.2)',
+                        padding: '0.8rem 2rem',
+                        width: '100%'
+                      }}
                     >
-                      ⏹️ Clock Out
+                      ⏹️ Stop Tracking
                     </button>
+                    <div style={{ marginTop: '1rem', color: trackingError ? 'var(--neon-violet)' : 'var(--neon-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <div className="pulse-dot" style={{ width: '10px', height: '10px', borderRadius: '50%', background: trackingError ? 'var(--neon-violet)' : 'var(--neon-green)', boxShadow: `0 0 10px ${trackingError ? 'var(--neon-violet)' : 'var(--neon-green)'}` }}></div>
+                      {trackingError ? 'Connection Issue...' : `Active • ${elapsedDisplay}`}
+                    </div>
                   </>
                 ) : (
                   <>
