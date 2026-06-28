@@ -129,9 +129,7 @@ export default function CompanyChat({ loggedInMember }: { loggedInMember: Member
     }
   }, [cryptoKey, isUnlocked]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();

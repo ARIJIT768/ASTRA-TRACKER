@@ -422,12 +422,19 @@ function App() {
     setIsTracking(true);
     setTrackingStartTime(Date.now());
 
+    let useWebTracking = !isElectron;
+
     if (isElectron) {
       try {
         // @ts-ignore
         window.require('electron').ipcRenderer.send('clock-in', { memberId: loggedInMember.id });
-      } catch (e) { console.error(e); }
-    } else {
+      } catch (e) { 
+        console.error("Electron IPC failed, falling back to web tracking", e); 
+        useWebTracking = true;
+      }
+    } 
+    
+    if (useWebTracking) {
       // Web/mobile: send immediate first ping then every 60s
       sendTrackingPing(loggedInMember.id);
       webTrackingRef.current = setInterval(() => {
@@ -444,12 +451,18 @@ function App() {
     setElapsedDisplay('00:00:00');
     setTrackingError(false);
     
+    let useWebTracking = !isElectron;
+
     if (isElectron) {
       try {
         // @ts-ignore
         window.require('electron').ipcRenderer.send('clock-out');
-      } catch (e) { console.error(e); }
-    } else {
+      } catch (e) { 
+        useWebTracking = true;
+      }
+    } 
+    
+    if (useWebTracking) {
       if (webTrackingRef.current) {
         clearInterval(webTrackingRef.current);
         webTrackingRef.current = null;
