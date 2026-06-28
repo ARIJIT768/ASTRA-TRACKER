@@ -30,33 +30,51 @@ function createWindow() {
   });
 }
 
+function sendPing(memberId, callback) {
+  const payload = JSON.stringify({
+    member_id: memberId,
+    description: 'Desktop App - Auto Tracked',
+    hours: 60 / 3600
+  });
+
+  const req = https.request('https://astra-tracker-mu.vercel.app/api/log', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(payload)
+    }
+  }, (res) => {
+    if (callback) callback(true);
+  });
+
+  req.on('error', (e) => {
+    console.error('Ping failed:', e);
+    if (callback) callback(false);
+  });
+
+  req.write(payload);
+  req.end();
+}
+
 function startNativeTracking(memberId) {
   if (trackingInterval) clearInterval(trackingInterval);
+  
+  // Fire IMMEDIATELY on clock-in so user sees a result right away
+  sendPing(memberId, (success) => {
+    if (mainWindow) {
+      mainWindow.webContents.send(success ? 'tracking-ping-success' : 'tracking-ping-failed');
+    }
+  });
   
   trackingInterval = setInterval(() => {
     const idleTime = powerMonitor.getSystemIdleTime();
     
     if (idleTime < 60) {
-      const payload = JSON.stringify({
-        member_id: memberId,
-        description: 'Desktop App - Auto Tracked',
-        hours: 60 / 3600 // 60 seconds in hours
-      });
-
-      const req = https.request('https://astra-tracker-mu.vercel.app/api/log', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(payload)
+      sendPing(memberId, (success) => {
+        if (mainWindow) {
+          mainWindow.webContents.send(success ? 'tracking-ping-success' : 'tracking-ping-failed');
         }
-      }, (res) => {});
-
-      req.on('error', (e) => {
-        console.error('Ping failed:', e);
       });
-
-      req.write(payload);
-      req.end();
     }
   }, 60000);
 }

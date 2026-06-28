@@ -235,6 +235,46 @@ app.post('/api/reset-server', async (req, res) => {
     }
 });
 
+// Stats History - Daily hours for last 30 days (for sparkline charts)
+app.get('/api/stats/:id/history', async (req, res) => {
+    const query = `
+        SELECT date_trunc('day', timestamp)::date AS day, SUM(hours) AS total
+        FROM logs 
+        WHERE member_id = $1 AND timestamp >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY day 
+        ORDER BY day
+    `;
+    try {
+        const { rows } = await pool.query(query, [req.params.id]);
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Week Info - Calendar-aware week boundaries
+app.get('/api/week-info', async (req, res) => {
+    try {
+        const { rows } = await pool.query(`
+            SELECT 
+                date_trunc('week', CURRENT_DATE)::date AS week_start,
+                (date_trunc('week', CURRENT_DATE) + INTERVAL '6 days')::date AS week_end,
+                EXTRACT(DOW FROM CURRENT_DATE) AS day_of_week,
+                EXTRACT(WEEK FROM CURRENT_DATE) AS week_number
+        `);
+        const info = rows[0];
+        const daysRemaining = 7 - parseInt(info.day_of_week || '0');
+        res.json({
+            weekStart: info.week_start,
+            weekEnd: info.week_end,
+            daysRemaining: daysRemaining === 7 ? 0 : daysRemaining,
+            weekNumber: parseInt(info.week_number)
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // For Vercel Serverless Functions
 module.exports = app;
 
