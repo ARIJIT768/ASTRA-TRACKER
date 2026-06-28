@@ -39,8 +39,8 @@ function startNativeTracking(memberId) {
     if (idleTime < 60) {
       const payload = JSON.stringify({
         member_id: memberId,
-        type: 'auto_ping',
-        active_window: 'ASTRA Desktop App'
+        description: 'Desktop App - Auto Tracked',
+        hours: 60 / 3600 // 60 seconds in hours
       });
 
       const req = https.request('https://astra-tracker-mu.vercel.app/api/log', {
