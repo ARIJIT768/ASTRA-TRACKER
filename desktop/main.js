@@ -17,11 +17,8 @@ function createWindow() {
     }
   });
 
-  const distPath = isPackaged 
-    ? path.join(process.resourcesPath, 'dist', 'index.html') 
-    : path.join(__dirname, '..', 'frontend', 'dist', 'index.html');
-    
-  mainWindow.loadFile(distPath);
+  // Point straight to the Vercel frontend app so any UI changes are instantly reflected on Desktop
+  mainWindow.loadURL('https://astra-tracker-gqcs.vercel.app');
 
   mainWindow.on('closed', () => {
     mainWindow = null;
