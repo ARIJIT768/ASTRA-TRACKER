@@ -165,79 +165,48 @@ const getAppIcon = (appName: string) => {
   return <MdWorkOutline size={24} color="#00f0ff" />;
 };
 
-// ===================== MINI SPARKLINE COMPONENT =====================
+// ===================== MINI SPARKLINE COMPONENT (Using Chart.js) =====================
 function Sparkline({ data, color }: { data: number[], color: string }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || data.length === 0) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    const dpr = window.devicePixelRatio || 1;
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.clearRect(0, 0, w, h);
-    
-    const max = Math.max(...data, 0.01);
-    const step = w / Math.max(data.length - 1, 1);
-    
-    // Fill gradient
-    const gradient = ctx.createLinearGradient(0, 0, 0, h);
-    gradient.addColorStop(0, color + '30');
-    gradient.addColorStop(1, color + '00');
-    
-    ctx.beginPath();
-    ctx.moveTo(0, h);
-    data.forEach((val, i) => {
-      const x = i * step;
-      const y = h - (val / max) * (h * 0.85);
-      if (i === 0) ctx.lineTo(x, y);
-      else {
-        const prevX = (i - 1) * step;
-        const prevY = h - (data[i - 1] / max) * (h * 0.85);
-        const cpx = (prevX + x) / 2;
-        ctx.bezierCurveTo(cpx, prevY, cpx, y, x, y);
-      }
-    });
-    ctx.lineTo(w, h);
-    ctx.fillStyle = gradient;
-    ctx.fill();
-    
-    // Line
-    ctx.beginPath();
-    data.forEach((val, i) => {
-      const x = i * step;
-      const y = h - (val / max) * (h * 0.85);
-      if (i === 0) ctx.moveTo(x, y);
-      else {
-        const prevX = (i - 1) * step;
-        const prevY = h - (data[i - 1] / max) * (h * 0.85);
-        const cpx = (prevX + x) / 2;
-        ctx.bezierCurveTo(cpx, prevY, cpx, y, x, y);
-      }
-    });
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    
-    // Glow dot on last point
-    const lastX = (data.length - 1) * step;
-    const lastY = h - (data[data.length - 1] / max) * (h * 0.85);
-    ctx.beginPath();
-    ctx.arc(lastX, lastY, 3, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(lastX, lastY, 6, 0, Math.PI * 2);
-    ctx.fillStyle = color + '40';
-    ctx.fill();
-  }, [data, color]);
-  
-  return <canvas ref={canvasRef} className="sparkline-container" style={{ width: '100%', height: '40px' }} />;
+  // If no data or all zeros, create a flat line at 0 for proper scaling
+  const chartData = data.length > 0 ? data : [0, 0];
+  const displayData = chartData.length === 1 ? [chartData[0], chartData[0]] : chartData;
+
+  const dataConfig = {
+    labels: displayData.map((_, i) => String(i)),
+    datasets: [
+      {
+        data: displayData,
+        borderColor: color,
+        borderWidth: 2,
+        backgroundColor: color + '15', // very faint fill
+        fill: true,
+        tension: 0.4, // smooth curve
+        pointRadius: 0, // hide points
+        pointHoverRadius: 0,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: false },
+    },
+    scales: {
+      x: { display: false },
+      y: { display: false, min: 0 },
+    },
+    layout: { padding: 0 },
+    interaction: { intersect: false, mode: 'index' as const },
+  };
+
+  return (
+    <div className="sparkline-container" style={{ width: '100%', height: '50px' }}>
+      <Line data={dataConfig} options={options as any} />
+    </div>
+  );
 }
 
 // ===================== CUSTOM DROPDOWN COMPONENT =====================
@@ -793,7 +762,7 @@ function App() {
 
             {/* Clock In / Out Panel */}
             <div className="panel glass animate-stagger-5">
-              <h2>🎯 ASTRA Agent</h2>
+              <h2>⏱️ ASTRA Time Tracker</h2>
               <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                 {isTracking ? (
                   <>
