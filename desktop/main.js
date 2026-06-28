@@ -19,11 +19,8 @@ function createWindow() {
 
   const isPackaged = app.isPackaged;
   
-  const distPath = isPackaged 
-    ? path.join(process.resourcesPath, 'dist', 'index.html') 
-    : path.join(__dirname, '..', 'frontend', 'dist', 'index.html');
-    
-  mainWindow.loadFile(distPath);
+  // Point straight to the Vercel app so any frontend changes are instantly reflected on Desktop
+  mainWindow.loadURL('https://astra-tracker-mu.vercel.app');
 
   mainWindow.on('closed', () => {
     mainWindow = null;
